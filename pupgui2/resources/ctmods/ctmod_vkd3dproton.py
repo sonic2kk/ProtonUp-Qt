@@ -1,27 +1,27 @@
 # pupgui2 compatibility tools module
-# Luxtorpeda
-# Copyright (C) 2021 DavidoTek, partially based on AUNaseef's protonup
+# vkd3d-proton for Lutris: https://github.com/HansKristian-Work/vkd3d-proton/
+# Copyright (C) 2022 DavidoTek, partially based on AUNaseef's protonup
 
 import os
 import shutil
 import tarfile
 import requests
+import zstandard
 
 from PySide6.QtCore import QObject, QCoreApplication, Signal, Property
 
 from pupgui2.util import ghapi_rlcheck
 
 
-CT_NAME = 'Luxtorpeda'
-CT_LAUNCHERS = ['steam']
-CT_DESCRIPTION = {'en': QCoreApplication.instance().translate('ctmod_luxtorpeda', '''Luxtorpeda provides Linux-native game engines for specific Windows-only games.''')}
-
+CT_NAME = 'vkd3d-proton'
+CT_LAUNCHERS = ['lutris']
+CT_DESCRIPTION = {'en': QCoreApplication.instance().translate('ctmod_vkd3d-proton', '''Fork of Wine's VKD3D which aims to implement the full Direct3D 12 API on top of Vulkan (Valve Release).<br/><br/>https://github.com/lutris/docs/blob/master/HowToDXVK.md''')}
 
 class CtInstaller(QObject):
 
     BUFFER_SIZE = 65536
-    CT_URL = 'https://api.github.com/repos/luxtorpeda-dev/luxtorpeda/releases'
-    CT_INFO_URL = 'https://github.com/luxtorpeda-dev/luxtorpeda/releases/tag/'
+    CT_URL = 'https://api.github.com/repos/HansKristian-Work/vkd3d-proton/releases'
+    CT_INFO_URL = 'https://github.com/HansKristian-Work/vkd3d-proton/releases/tag/'
 
     p_download_progress_percent = 0
     download_progress_percent = Signal(int)
@@ -51,7 +51,7 @@ class CtInstaller(QObject):
         Return Type: bool
         """
         try:
-            file = requests.get(url, stream=True)
+            file = self.rs.get(url, stream=True)
         except OSError:
             return False
 
@@ -80,16 +80,16 @@ class CtInstaller(QObject):
         Fetch GitHub release information
         Return Type: dict
         Content(s):
-            'version', 'date', 'download', 'size'
+            'version', 'date', 'download', 'size', 'checksum'
         """
         url = self.CT_URL + (f'/tags/{tag}' if tag else '/latest')
-        data = requests.get(url).json()
+        data = self.rs.get(url).json()
         if 'tag_name' not in data:
             return None
 
         values = {'version': data['tag_name'], 'date': data['published_at'].split('T')[0]}
         for asset in data['assets']:
-            if asset['name'].endswith('tar.xz'):
+            if asset['name'].endswith('tar.zst'):
                 values['download'] = asset['browser_download_url']
                 values['size'] = asset['size']
         return values
@@ -106,7 +106,7 @@ class CtInstaller(QObject):
         List available releases
         Return Type: str[]
         """
-        return [release['tag_name'] for release in ghapi_rlcheck(requests.get(f'{self.CT_URL}?per_page={str(count)}').json()) if 'tag_name' in release]
+        return [release['tag_name'] for release in ghapi_rlcheck(self.rs.get(f'{self.CT_URL}?per_page={str(count)}').json()) if 'tag_name' in release]
 
     def get_tool(self, version, install_dir, temp_dir):
         """
@@ -118,23 +118,26 @@ class CtInstaller(QObject):
         if not data or 'download' not in data:
             return False
 
-        protondir = f'{install_dir}luxtorpeda'
+        vkd3d_dir = os.path.abspath(os.path.join(install_dir, '../../runtime/vkd3d'))
 
-        destination = temp_dir
-        destination += data['download'].split('/')[-1]
-        destination = destination
+        temp_download = os.path.join(temp_dir, data['download'].split('/')[-1])  # e.g. /tmp/[...]/vkd3d-proton-2.7.tar.zst
+        temp_archive = temp_download.replace('.zst', '')  # e.g. /tmp/[...]/vkd3d-proton-2.7.tar
 
-        if not self.__download(url=data['download'], destination=destination):
+        if not self.__download(url=data['download'], destination=temp_download):
             return False
 
-        if os.path.exists(protondir):
-            shutil.rmtree(protondir)
-        tarfile.open(destination, "r:xz").extractall(install_dir)
+        if os.path.exists(f'{vkd3d_dir}vkd3d-proton-{data["version"].lower()}'):
+            shutil.rmtree(f'{vkd3d_dir}vkd3d-proton-{data["version"].lower()}')
 
-        if os.path.exists(protondir):
-            with open(os.path.join(protondir, 'VERSION.txt'), 'w') as f:
-                f.write(version)
-                f.write('\n')
+        # Extract .tar.zst file - Very convoluted, there is an open request to add support for this to Python tarfile: https://bugs.python.org/issue37095
+        vkd3d_decomp = zstandard.ZstdDecompressor()
+
+        with open(temp_download, 'rb') as vkd3d_infile, open(temp_archive, 'wb') as vkd3d_outfile:
+            vkd3d_decomp.copy_stream(vkd3d_infile, vkd3d_outfile)
+
+        with open(temp_archive, 'rb') as vkd3d_outfile:
+            with tarfile.open(fileobj=vkd3d_outfile) as vkd3d_tarfile:
+                vkd3d_tarfile.extractall(vkd3d_dir)
 
         self.__set_download_progress_percent(100)
 

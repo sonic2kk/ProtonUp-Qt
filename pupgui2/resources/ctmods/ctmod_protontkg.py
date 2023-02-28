@@ -2,16 +2,22 @@
 # Proton-Tkg https://github.com/Frogging-Family/wine-tkg-git
 # Copyright (C) 2022 DavidoTek, partially based on AUNaseef's protonup
 
-import os, shutil, tarfile, requests, glob
+import os
+import glob
+import shutil
+import tarfile
+import requests
+import zstandard
 from zipfile import ZipFile
-from PySide6.QtCore import *
+
+from PySide6.QtCore import QObject, QCoreApplication, Signal, Property
+
+from pupgui2.util import ghapi_rlcheck
+
 
 CT_NAME = 'Proton Tkg'
 CT_LAUNCHERS = ['steam']
-CT_DESCRIPTION = {}
-CT_DESCRIPTION['en'] = '''Custom Proton build for running Windows games, built with the Wine-tkg build system.'''
-CT_DESCRIPTION['de'] = '''Proton-Tkg Build für Windows-Spiele, erstellt mit dem Wine-tkg Build System.'''
-CT_DESCRIPTION['pl'] = '''Kompilacja Proton-Tkg do uruchamiania Windowsych gier, zbudowana z Wine-tkg.'''
+CT_DESCRIPTION = {'en': QCoreApplication.instance().translate('ctmod_protontkg', '''Custom Proton build for running Windows games, built with the Wine-tkg build system.''')}
 
 
 class CtInstaller(QObject):
@@ -23,6 +29,7 @@ class CtInstaller(QObject):
     CT_ARTIFACT_URL = 'https://api.github.com/repos/Frogging-Family/wine-tkg-git/actions/runs/{}/artifacts'
     CT_INFO_URL_CI = 'https://github.com/Frogging-Family/wine-tkg-git/actions/runs/'
     PROTON_PACKAGE_NAME = 'proton-valvexbe-arch-nopackage'
+    TKG_EXTRACT_NAME = 'proton_tkg'
 
     p_download_progress_percent = 0
     download_progress_percent = Signal(int)
@@ -30,7 +37,7 @@ class CtInstaller(QObject):
     def __init__(self, main_window = None):
         super(CtInstaller, self).__init__()
         self.p_download_canceled = False
-        self.rs = main_window.rs if main_window.rs else requests.Session()
+        self.rs = main_window.rs or requests.Session()
 
     def get_download_canceled(self):
         return self.p_download_canceled
@@ -85,7 +92,7 @@ class CtInstaller(QObject):
         Get artifact from workflow run id.
         Return Type: str
         """
-        artifact_info = self.rs.get(self.CT_ARTIFACT_URL.format(commit) + '?per_page=100').json()
+        artifact_info = self.rs.get(f'{self.CT_ARTIFACT_URL.format(commit)}?per_page=100').json()
         if artifact_info.get("total_count") != 1:
             return None
         return artifact_info["artifacts"][0]
@@ -102,9 +109,8 @@ class CtInstaller(QObject):
         if not data:
             return
         values = {'version': data['workflow_run']['head_sha'], 'date': data['updated_at'].split('T')[0]}
-        values['download'] = "https://nightly.link/Frogging-Family/wine-tkg-git/actions/runs/{}/{}.zip".format(
-            data["workflow_run"]["id"],  data["name"]
-        )
+        values['download'] = f'https://nightly.link/Frogging-Family/wine-tkg-git/actions/runs/{data["workflow_run"]["id"]}/{data["name"]}.zip'
+
         values['size'] = data['size_in_bytes']
         return values
 
@@ -140,13 +146,11 @@ class CtInstaller(QObject):
 
     def __fetch_workflows(self, count=100):
         tags = []
-        for workflow in self.rs.get(self.CT_WORKFLOW_URL + '?per_page=' + str(count)).json()["workflows"]:
+        for workflow in self.rs.get(f'{self.CT_WORKFLOW_URL}?per_page={str(count)}').json().get("workflows", {}):
             if workflow['state'] != "active" or self.PROTON_PACKAGE_NAME not in workflow['path']:
                 continue
-            for run in self.rs.get(workflow["url"] + "/runs").json()["workflow_runs"]:
-                if run['conclusion'] != "success":
-                    continue
-                tags.append(str(run['id']))
+            tags.extend(str(run['id']) for run in self.rs.get(workflow["url"] + "/runs").json()["workflow_runs"] if run['conclusion'] == "success")
+
         return tags
 
     def fetch_releases(self, count=100):
@@ -155,7 +159,7 @@ class CtInstaller(QObject):
         Return Type: str[]
         """
         tags = self.__fetch_workflows(count=count)
-        for release in self.rs.get(self.CT_URL + '?per_page=' + str(count)).json():
+        for release in ghapi_rlcheck(self.rs.get(f'{self.CT_URL}?per_page={str(count)}').json()):
             # Check assets length because latest release (7+) doesn't have assets.
             if 'tag_name' not in release or len(release["assets"]) == 0:
                 continue
@@ -177,7 +181,7 @@ class CtInstaller(QObject):
         if not self.__download(url=data['download'], destination=destination, f_size=data.get("size")):
             return False
 
-        install_folder = install_dir + 'proton_tkg_' + data['version'].lower()
+        install_folder = f'{install_dir}{self.TKG_EXTRACT_NAME}' + data['version'].lower()
         if os.path.exists(install_folder):
             shutil.rmtree(install_folder)
 
@@ -187,13 +191,47 @@ class CtInstaller(QObject):
             with ZipFile(destination) as z:
                 os.mkdir(install_folder)
                 z.extractall(install_folder)
-            # Workaround for artifact .zip archive is actually .tar inside, wtf.
-            f_count = 0
-            for f in glob.glob(install_folder + "/*.tar"):
-                f_count += 1
-                tarfile.open(f, "r").extractall(install_dir)
-            if f_count > 0:
-                shutil.rmtree(install_folder)
+            
+            # Supports both Wine-tkg and Proton-tkg
+            zst_glob = glob.glob(f'{install_folder}/*.tar.zst')
+            if len(zst_glob) > 0:
+                # Wine-tkg is .tar.zst
+                tkg_dir = os.path.abspath(os.path.join(install_dir, '../../runners/wine'))
+                tkg_archive_name = zst_glob[0]  # Should only ever be 1 really, so assume the first is the zst archive we're looking for
+
+                temp_download = os.path.join(install_folder, tkg_archive_name)
+                temp_archive = temp_download.replace('.zst', '')
+
+                # Extract .tar.zst file - Closely mirrors vkd3d-proton ctmod except for extraction logic
+                tkg_decomp = zstandard.ZstdDecompressor()
+
+                with open(temp_download, 'rb') as tkg_infile, open(temp_archive, 'wb') as tkg_outfile:
+                    tkg_decomp.copy_stream(tkg_infile, tkg_outfile)
+
+                with open(temp_archive, 'rb') as tkg_outfile:
+                    with tarfile.open(fileobj=tkg_outfile) as tkg_tarfile:
+                        tkg_tarfile.extractall(tkg_dir)
+                        final_extract_dir = os.path.dirname(tkg_archive_name)
+
+                        shutil.rmtree(final_extract_dir)  # Remove extracted folder
+                        os.rename(os.path.join(install_dir, 'usr'), final_extract_dir)  # Rename extracted 'usr' folder to match the .zip file extracted name for consistency / easier removal if redownloading
+
+                        # Remove lingering dotfiles
+                        remove_extractfiles = [ '.BUILDINFO', '.INSTALL', '.MTREE', '.PKGINFO' ]
+                        for rmfile in remove_extractfiles:
+                            rmfile_fullpath = os.path.join(install_dir, rmfile)
+                            if os.path.exists(rmfile_fullpath):
+                                os.remove(rmfile_fullpath)
+            else:
+                # Regular .zip for Proton-tkg
+                #
+                # Workaround for artifact .zip archive is actually .tar inside, wtf.
+                f_count = 0
+                for f in glob.glob(f"{install_folder}/*.tar"):
+                    f_count += 1
+                    tarfile.open(f, "r").extractall(install_dir)
+                if f_count > 0:
+                    shutil.rmtree(install_folder)
         else:
             self.__set_download_progress_percent(-1)
             return False

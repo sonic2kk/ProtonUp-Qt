@@ -1,21 +1,75 @@
-import os, subprocess, shutil
+import os
 import sys
+import subprocess
+import shutil
 import platform
 import threading
-from typing import Dict, List
+from typing import Dict, List, Union, Tuple
 import webbrowser
 import requests
 from configparser import ConfigParser
 
 import PySide6
-from PySide6.QtWidgets import *
-from PySide6.QtCore import *
-from PySide6.QtGui import *
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtWidgets import QApplication, QStyleFactory, QMessageBox, QCheckBox
 
-from .constants import POSSIBLE_INSTALL_LOCATIONS, CONFIG_FILE, PALETTE_DARK, TEMP_DIR
-from .constants import AWACY_GAME_LIST_URL, LOCAL_AWACY_GAME_LIST
-from .datastructures import BasicCompatTool, CTType
-from .steamutil import remove_steamtinkerlaunch
+from pupgui2.constants import POSSIBLE_INSTALL_LOCATIONS, CONFIG_FILE, PALETTE_DARK, TEMP_DIR
+from pupgui2.constants import AWACY_GAME_LIST_URL, LOCAL_AWACY_GAME_LIST
+from pupgui2.datastructures import BasicCompatTool, CTType
+from pupgui2.steamutil import remove_steamtinkerlaunch
+
+
+def create_msgbox(
+    title: str,
+    text: str,
+    info_text: str = None,
+    buttons: Union[QMessageBox.StandardButton, Tuple[QMessageBox.StandardButton]] = QMessageBox.Ok,
+    default_button: QMessageBox.StandardButton = QMessageBox.Ok,
+    detailed_text: str = None,
+    icon: QMessageBox.Icon = QMessageBox.Information,
+    execute: bool = True,
+) -> Union[int, QMessageBox]:
+    """
+    Create a new message box and show it (if execute=True) or return it (if execute=False)
+    Args:
+        text: The text to show.
+        info_text: The informative text to show.
+        buttons: The buttons to show, can be either a button or a tuple of buttons.
+        default_button: The default button to use when shown.
+        detailed_text: The detailed text to show.
+        icon: The icon to show, default is the 'information' icon.
+        execute: Whether to execute the message box after creating, default to True.
+    Returns:
+        A QMessageBox if execute is set to False, else returns the exit code from the message box.
+        If custom buttons (parameter buttons) are specified, a tuple (QMessageBox, List[QMessageBox.StandardButton])
+            or (int, List[QMessageBox.StandardButton]) is returned.
+    """
+    msg_box = QMessageBox()
+    msg_box.setWindowTitle(title)
+    msg_box.setText(text)
+    if info_text:
+        msg_box.setInformativeText(info_text)
+    custom_buttons = []
+    if isinstance(buttons, (list, tuple, set)):
+        for btn in buttons:
+            if isinstance(btn[0], str):
+                custom_buttons.append(msg_box.addButton(btn[0], btn[1]))
+            else:
+                custom_buttons.append(msg_box.addButton(btn[0]))
+    else:
+        msg_box.setStandardButtons(buttons)
+    msg_box.setDefaultButton(default_button)
+    if detailed_text:
+        msg_box.setDetailedText(detailed_text)
+    msg_box.setIcon(icon)
+    if execute:
+        if custom_buttons:
+            return msg_box.exec(), custom_buttons
+        return msg_box.exec()
+
+    if custom_buttons:
+        return msg_box, custom_buttons
+    return msg_box
 
 
 def apply_dark_theme(app: QApplication) -> None:
@@ -45,14 +99,13 @@ def apply_dark_theme(app: QApplication) -> None:
                     darkmode_enabled = True
         except:
             pass
-        if not is_plasma and darkmode_enabled:
+        if not is_plasma:
             app.setStyle('Fusion')
-            app.setPalette(PALETTE_DARK())
-        elif is_plasma:
-            pass
-        else:
-            app.setStyle('Fusion')
-            app.setPalette(QStyleFactory.create('fusion').standardPalette())
+            if darkmode_enabled:
+                app.setPalette(PALETTE_DARK())
+            else:
+                app.setPalette(QStyleFactory.create('fusion').standardPalette())
+
 
 def config_theme(theme=None) -> str:
     """
@@ -75,6 +128,7 @@ def config_theme(theme=None) -> str:
         if config.has_option('pupgui2', 'theme'):
             return config['pupgui2']['theme']
     return theme
+
 
 def config_advanced_mode(advmode=None) -> str:
     """
@@ -112,7 +166,7 @@ def create_compatibilitytools_folder() -> None:
             try:
                 os.mkdir(install_dir)
             except Exception as e:
-                print('Error trying to create compatibility tools folder ' + str(install_dir) + ': ' + str(e))
+                print(f'Error trying to create compatibility tools folder {str(install_dir)}: {str(e)}')
 
 
 def available_install_directories() -> List[str]:
@@ -218,25 +272,25 @@ def config_custom_install_location(install_dir=None, launcher='') -> Dict[str, s
 
 
 def list_installed_ctools(install_dir: str, without_version=False) -> List[str]:
-        """
-        List installed compatibility tool versions
-        Returns the name of the tool and the version from VERSION.txt if without_version=False
-        Return Type: List[str]
-        """
-        versions_found = []
+    """
+    List installed compatibility tool versions
+    Returns the name of the tool and the version from VERSION.txt if without_version=False
+    Return Type: List[str]
+    """
+    versions_found = []
 
-        if os.path.exists(install_dir):
-            folders = os.listdir(install_dir)
-            for folder in folders:
-                ver_file = os.path.join(install_dir, folder, 'VERSION.txt')
-                if os.path.exists(ver_file) and not without_version:
-                    with open(ver_file, 'r') as f:
-                        ver = f.read()
-                    versions_found.append(folder + ' - ' + ver.strip())
-                else:
-                    versions_found.append(folder)
+    if os.path.exists(install_dir):
+        folders = os.listdir(install_dir)
+        for folder in folders:
+            ver_file = os.path.join(install_dir, folder, 'VERSION.txt')
+            if os.path.exists(ver_file) and not without_version:
+                with open(ver_file, 'r') as f:
+                    ver = f.read()
+                versions_found.append(f'{folder} - {ver.strip()}')
+            else:
+                versions_found.append(folder)
 
-        return versions_found
+    return versions_found
 
 
 def remove_ctool(ver: str, install_dir: str) -> bool:
@@ -248,9 +302,9 @@ def remove_ctool(ver: str, install_dir: str) -> bool:
     # Special case hack to remove SteamTinkerLaunch
     if 'steamtinkerlaunch' in target.lower():
         mb = QMessageBox()
-        cb = QCheckBox(QObject.tr('Delete STL configuration'))
-        mb.setWindowTitle(QObject.tr('Uninstalling SteamTinkerLaunch'))
-        mb.setText(QObject.tr('STL will be removed from your system.\nDo you want the configuration to be removed?'))
+        cb = QCheckBox(QCoreApplication.instance().translate('util.py', 'Delete SteamTinkerLaunch configuration'))
+        mb.setWindowTitle(QCoreApplication.instance().translate('util.py', 'Uninstalling SteamTinkerLaunch'))
+        mb.setText(QCoreApplication.instance().translate('util.py', 'SteamTinkerLaunch will be removed from your system. If this tool was installed with ProtonUp-Qt, this will also update your PATH to remove SteamTinkerLaunch.\nDo you want the configuration to be removed?'))
         mb.setCheckBox(cb)
         mb.exec()
         return remove_steamtinkerlaunch(compat_folder=target, remove_config=cb.isChecked())
@@ -267,9 +321,7 @@ def sort_compatibility_tool_names(unsorted: List[str], reverse=False) -> List[st
     """
     unsorted = sorted(unsorted)
     ver_dict = {}
-    i = 0
-    for ver in unsorted:
-        i += 1
+    for i, ver in enumerate(unsorted, start=1):
         if ver.startswith('GE-Proton'):
             ver_dict[100+i] = ver
         elif 'SteamTinkerLaunch' in ver:
@@ -285,9 +337,7 @@ def sort_compatibility_tool_names(unsorted: List[str], reverse=False) -> List[st
         else:
             ver_dict[i] = ver
 
-    sorted_vers = []
-    for v in sorted(ver_dict):
-        sorted_vers.append(ver_dict[v])
+    sorted_vers = [ver_dict[v] for v in sorted(ver_dict)]
 
     if reverse:
         sorted_vers.reverse()
@@ -303,7 +353,7 @@ def open_webbrowser_thread(url: str) -> None:
         t = threading.Thread(target=webbrowser.open, args=[url])
         t.start()
     except:
-        print('Could not open webbrowser url ' + str(url))
+        print(f'Could not open webbrowser url {url}')
 
 
 def print_system_information() -> None:
@@ -311,13 +361,13 @@ def print_system_information() -> None:
     Print system information like Python/Qt/OS version to the console
     """
     ver_info = 'Python ' + sys.version.replace('\n', '')
-    ver_info += ', PySide ' + PySide6.__version__ + '\n'
+    ver_info += f', PySide {PySide6.__version__}' + '\n'
     ver_info += 'Platform: '
     try:
-        f = open('/etc/lsb-release')
-        l = f.readlines()
-        ver_info += l[0].strip().split('=')[1] + ' ' + l[1].strip().split('=')[1] + ' '
-        f.close()
+        with open('/etc/lsb-release') if os.path.exists('/etc/lsb-release') else open('/etc/os-release') as f:
+            l = f.readlines()
+            ver_info += l[0].strip().split('=')[1] + ' ' + l[1].strip().split('=')[1] + ' '
+            ver_info = ver_info.replace('"', '')
     except:
         pass
     ver_info += str(platform.platform())
@@ -331,21 +381,18 @@ def single_instance() -> bool:
     """
     lockfile = os.path.join(TEMP_DIR, 'lockfile')
     if os.path.exists(lockfile):
-        f = open(lockfile, 'r')
-        pid = f.readline().strip()
-        f.close()
+        with open(lockfile, 'r') as f:
+            pid = f.readline().strip()
         cmdline_file = os.path.join('/proc/', pid, 'cmdline')
         if os.path.exists(cmdline_file):
-            f = open(cmdline_file, 'r')
-            cmdline = f.read()
-            f.close()
+            with open(cmdline_file, 'r') as f:
+                cmdline = f.read()
             if 'pupgui2' in cmdline and int(pid) != os.getpid():
                 return False
     try:
         os.mkdir(TEMP_DIR)
-        f = open(lockfile, 'w')
-        f.write(str(os.getpid()))
-        f.close()
+        with open(lockfile, 'w') as f:
+            f.write(str(os.getpid()))
     except:
         pass
     return True
@@ -390,12 +437,35 @@ def get_installed_ctools(install_dir: str) -> List[BasicCompatTool]:
     return ctools
 
 def host_which(name: str) -> str:
-        """
-        Runs 'which <name>' on the host system (either normal or using 'flatpak-spawn --host' when inside Flatpak)
-        Return Type: str
-        """
-        proc_prefix = ['flatpak-spawn', '--host'] if os.path.exists('/.flatpak-info') else []
-        which = subprocess.run(proc_prefix + ['which', name], universal_newlines=True, stdout=subprocess.PIPE).stdout.strip()
-        if which == '':
-            return None
-        return which
+    """
+    Runs 'which <name>' on the host system (either normal or using 'flatpak-spawn --host' when inside Flatpak)
+    Return Type: str
+    """
+    proc_prefix = ['flatpak-spawn', '--host'] if os.path.exists('/.flatpak-info') else []
+    which = subprocess.run(proc_prefix + ['which', name], universal_newlines=True, stdout=subprocess.PIPE).stdout.strip()
+    return None if which == '' else which
+
+def ghapi_rlcheck(json: dict):
+    """ Checks if the given GitHub request response (JSON) contains a rate limit warning and warns the user """
+    if type(json) == dict:
+        if 'API rate limit exceeded' in json.get('message', ''):
+            print('Warning: GitHub API rate limit exceeded. See https://github.com/DavidoTek/ProtonUp-Qt/issues/161#issuecomment-1358200080 for details.')
+            QApplication.instance().message_box_message.emit(
+                QCoreApplication.instance().translate('util.py', 'Warning: GitHub API rate limit exceeded!'),
+                QCoreApplication.instance().translate('util.py', 'GitHub API rate limit exceeded. You may need to wait a while or specify a GitHub API key if you have one.\n\nSee https://github.com/DavidoTek/ProtonUp-Qt/issues/161#issuecomment-1358200080 for details.'),
+                QMessageBox.Warning
+                )
+    return json
+
+def is_online(host='https://api.github.com/repos/', timeout=3) -> bool:
+    """
+    Attempts to ping a given host using `requests`.
+    Returns False if `requests` raises a `ConnectionError` or `Timeout` exception, otherwise returns True 
+    
+    Return Type: bool
+    """
+    try:
+        requests.get(host, timeout=timeout)
+        return True
+    except (requests.ConnectionError, requests.Timeout):
+        return False

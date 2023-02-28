@@ -2,18 +2,21 @@
 # Roberta
 # Copyright (C) 2021 DavidoTek, partially based on AUNaseef's protonup
 
-import os, shutil, tarfile, requests
-from PySide6.QtCore import *
+import os
+import shutil
+import tarfile
+import requests
+
+from PySide6.QtCore import QObject, QCoreApplication, Signal, Property
 from PySide6.QtWidgets import QMessageBox
-from ...util import host_which
+
+from pupgui2.util import ghapi_rlcheck
+from pupgui2.util import host_which
+
 
 CT_NAME = 'Roberta'
 CT_LAUNCHERS = ['steam']
-CT_DESCRIPTION = {}
-CT_DESCRIPTION['en'] = '''Steam Play compatibility tool to run adventure games using native Linux ScummVM.'''
-CT_DESCRIPTION['de'] = '''Steam Play Kompatibilitätstool, um Adventuregames mit Linux-nativer ScummVM zu spielen.'''
-CT_DESCRIPTION['nl'] = '''Steam Play-compatibiliteitshulpmiddel voor het spelen van avonturengames met behulp van de Linux-versie van ScummVM.'''
-CT_DESCRIPTION['pl'] = '''Narzędzie kompatybilności Steam Play do uruchamiania gier przygodowych poprzez natywny Linuksowy ScummVM.'''
+CT_DESCRIPTION = {'en': QCoreApplication.instance().translate('ctmod_roberta', '''Steam Play compatibility tool to run adventure games using native Linux ScummVM.''')}
 
 
 class CtInstaller(QObject):
@@ -24,12 +27,12 @@ class CtInstaller(QObject):
 
     p_download_progress_percent = 0
     download_progress_percent = Signal(int)
-    message_box_message = Signal(str, str, QMessageBox.Icon)
+    message_box_message = Signal((str, str, QMessageBox.Icon))
 
     def __init__(self, main_window = None):
         super(CtInstaller, self).__init__()
         self.p_download_canceled = False
-        self.rs = main_window.rs if main_window.rs else requests.Session()
+        self.rs = main_window.rs or requests.Session()
 
     def get_download_canceled(self):
         return self.p_download_canceled
@@ -99,13 +102,18 @@ class CtInstaller(QObject):
         Are the system requirements met?
         Return Type: bool
         """
+        tr_missing = QCoreApplication.instance().translate('ctmod_roberta', 'missing')
+        tr_found = QCoreApplication.instance().translate('ctmod_roberta', 'found')
+        msg_tr_title = QCoreApplication.instance().translate('ctmod_roberta', 'Missing dependencies!')
+
         if host_which('scummvm') and host_which('inotifywait'):
             return True
-        msg = 'You need scummvm and inotify-tools for Roberta.\n\n'
-        msg += 'scummvm: ' + str('missing' if host_which('scummvm') is None else 'found') + '\n'
-        msg += 'inotify-tools: ' + str('missing' if host_which('inotifywait') is None else 'found')
-        msg += '\n\nWill continue installing Roberta anyway.'
-        self.message_box_message.emit('Missing dependencies!', msg, QMessageBox.Warning)
+        msg = QCoreApplication.instance().translate('ctmod_roberta', 'You need scummvm and inotify-tools for Roberta.') + '\n\n'
+        msg += 'scummvm: ' + str(tr_missing if host_which('scummvm') is None else tr_found) + '\n'
+        msg += 'inotify-tools: ' + str(tr_missing if host_which('inotifywait') is None else tr_found)
+        msg += '\n\n' + QCoreApplication.instance().translate('ctmod_roberta', 'Will continue installing Roberta anyway.')
+
+        self.message_box_message.emit(msg_tr_title, msg, QMessageBox.Warning)
         return True  # install Roberta anyway
 
     def fetch_releases(self, count=100):
@@ -113,11 +121,7 @@ class CtInstaller(QObject):
         List available releases
         Return Type: str[]
         """
-        tags = []
-        for release in self.rs.get(self.CT_URL + '?per_page=' + str(count)).json():
-            if 'tag_name' in release:
-                tags.append(release['tag_name'])
-        return tags
+        return [release['tag_name'] for release in ghapi_rlcheck(self.rs.get(f'{self.CT_URL}?per_page={str(count)}').json()) if 'tag_name' in release]
 
     def get_tool(self, version, install_dir, temp_dir):
         """
@@ -129,7 +133,7 @@ class CtInstaller(QObject):
         if not data or 'download' not in data:
             return False
 
-        protondir = install_dir + 'roberta'
+        protondir = f'{install_dir}roberta'
 
         destination = temp_dir
         destination += data['download'].split('/')[-1]

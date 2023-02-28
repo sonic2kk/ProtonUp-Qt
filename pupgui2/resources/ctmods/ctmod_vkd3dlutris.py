@@ -1,6 +1,6 @@
 # pupgui2 compatibility tools module
-# Luxtorpeda
-# Copyright (C) 2021 DavidoTek, partially based on AUNaseef's protonup
+# vkd3d-lutris for Lutris: https://github.com/lutris/vkd3d/
+# Copyright (C) 2022 DavidoTek, partially based on AUNaseef's protonup
 
 import os
 import shutil
@@ -12,16 +12,15 @@ from PySide6.QtCore import QObject, QCoreApplication, Signal, Property
 from pupgui2.util import ghapi_rlcheck
 
 
-CT_NAME = 'Luxtorpeda'
-CT_LAUNCHERS = ['steam']
-CT_DESCRIPTION = {'en': QCoreApplication.instance().translate('ctmod_luxtorpeda', '''Luxtorpeda provides Linux-native game engines for specific Windows-only games.''')}
-
+CT_NAME = 'vkd3d-lutris'
+CT_LAUNCHERS = ['lutris']
+CT_DESCRIPTION = {'en': QCoreApplication.instance().translate('ctmod_vkd3d-lutris', '''Fork of Wine's VKD3D which aims to implement the full Direct3D 12 API on top of Vulkan (Lutris Release).<br/><br/>https://github.com/lutris/docs/blob/master/HowToDXVK.md''')}
 
 class CtInstaller(QObject):
 
     BUFFER_SIZE = 65536
-    CT_URL = 'https://api.github.com/repos/luxtorpeda-dev/luxtorpeda/releases'
-    CT_INFO_URL = 'https://github.com/luxtorpeda-dev/luxtorpeda/releases/tag/'
+    CT_URL = 'https://api.github.com/repos/lutris/vkd3d/releases'
+    CT_INFO_URL = 'https://github.com/lutris/vkd3d/releases/tag/'
 
     p_download_progress_percent = 0
     download_progress_percent = Signal(int)
@@ -51,7 +50,7 @@ class CtInstaller(QObject):
         Return Type: bool
         """
         try:
-            file = requests.get(url, stream=True)
+            file = self.rs.get(url, stream=True)
         except OSError:
             return False
 
@@ -80,10 +79,10 @@ class CtInstaller(QObject):
         Fetch GitHub release information
         Return Type: dict
         Content(s):
-            'version', 'date', 'download', 'size'
+            'version', 'date', 'download', 'size', 'checksum'
         """
         url = self.CT_URL + (f'/tags/{tag}' if tag else '/latest')
-        data = requests.get(url).json()
+        data = self.rs.get(url).json()
         if 'tag_name' not in data:
             return None
 
@@ -106,7 +105,7 @@ class CtInstaller(QObject):
         List available releases
         Return Type: str[]
         """
-        return [release['tag_name'] for release in ghapi_rlcheck(requests.get(f'{self.CT_URL}?per_page={str(count)}').json()) if 'tag_name' in release]
+        return [release['tag_name'] for release in ghapi_rlcheck(self.rs.get(f'{self.CT_URL}?per_page={str(count)}').json()) if 'tag_name' in release]
 
     def get_tool(self, version, install_dir, temp_dir):
         """
@@ -118,23 +117,16 @@ class CtInstaller(QObject):
         if not data or 'download' not in data:
             return False
 
-        protondir = f'{install_dir}luxtorpeda'
+        vkd3d_dir = os.path.join(install_dir, '../../runtime/vkd3d')
 
-        destination = temp_dir
-        destination += data['download'].split('/')[-1]
-        destination = destination
+        temp_download = os.path.join(temp_dir, data['download'].split('/')[-1])
 
-        if not self.__download(url=data['download'], destination=destination):
+        if not self.__download(url=data['download'], destination=temp_download):
             return False
 
-        if os.path.exists(protondir):
-            shutil.rmtree(protondir)
-        tarfile.open(destination, "r:xz").extractall(install_dir)
-
-        if os.path.exists(protondir):
-            with open(os.path.join(protondir, 'VERSION.txt'), 'w') as f:
-                f.write(version)
-                f.write('\n')
+        if os.path.exists(f'{vkd3d_dir}vkd3d-{data["version"].lower()}'):
+            shutil.rmtree(f'{vkd3d_dir}vkd3d-{data["version"].lower()}')
+        tarfile.open(temp_download, "r:xz").extractall(vkd3d_dir)        
 
         self.__set_download_progress_percent(100)
 

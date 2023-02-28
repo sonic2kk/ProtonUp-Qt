@@ -2,16 +2,20 @@
 # Wine-GE
 # Copyright (C) 2021 DavidoTek, partially based on AUNaseef's protonup
 
-import os, shutil, tarfile, requests, hashlib
-from PySide6.QtCore import *
+import os
+import shutil
+import tarfile
+import requests
+import hashlib
+
+from PySide6.QtCore import QObject, QCoreApplication, Signal, Property
+
+from pupgui2.util import ghapi_rlcheck
+
 
 CT_NAME = 'Wine-GE'
 CT_LAUNCHERS = ['lutris', 'heroicwine', 'bottles']
-CT_DESCRIPTION = {}
-CT_DESCRIPTION['en'] = '''Compatibility tool "Wine" to run Windows games on Linux. Based on Valve Proton Experimental's bleeding-edge Wine, built for Lutris.<br/><br/><b>Use this when you don't know what to choose.</b>'''
-CT_DESCRIPTION['de'] = '''Kompatibilitätstool "Wine" für Windows-Spiele unter Linux. Basiert auf der neusten Wine Version von Value Proton Experimental, für Lutris.<br/><br/><b>Verwende dies, wenn du dir nicht sicher bist.</b>'''
-CT_DESCRIPTION['nl'] = '''Compatibiliteitshulpmiddel 'Wine' voor het spelen van Windows-games op Linux. Dit hulpmiddel is gebaseerd op Valve Proton Experimental's Wine en is gemaakt voor Lutris.<br/><br/><b>Bij twijfel, kies dit hulpmiddel.</b>'''
-CT_DESCRIPTION['pl'] = '''Narzędzie kompatybilności "Wine" do uruchamiania Windowsowych gier na Linuksie. Bazuje na Valve'owym Protonie Experimental bleeding-edge Wine, zbudowane dla Lutrisa.<br/><br/><b>Użyj tego, jeśli nie wiesz co wybrać.</b>'''
+CT_DESCRIPTION = {'en': QCoreApplication.instance().translate('ctmod_00winege', '''Compatibility tool "Wine" to run Windows games on Linux. Based on Valve Proton Experimental's bleeding-edge Wine, built for Lutris.<br/><br/><b>Use this when you don't know what to choose.</b>''')}
 
 
 class CtInstaller(QObject):
@@ -26,7 +30,7 @@ class CtInstaller(QObject):
     def __init__(self, main_window = None):
         super(CtInstaller, self).__init__()
         self.p_download_canceled = False
-        self.rs = main_window.rs if main_window.rs else requests.Session()
+        self.rs = main_window.rs or requests.Session()
 
     def get_download_canceled(self):
         return self.p_download_canceled
@@ -119,11 +123,7 @@ class CtInstaller(QObject):
         List available releases
         Return Type: str[]
         """
-        tags = []
-        for release in self.rs.get(self.CT_URL + '?per_page=' + str(count)).json():
-            if 'tag_name' in release:
-                tags.append(release['tag_name'])
-        return tags
+        return [release['tag_name'] for release in ghapi_rlcheck(self.rs.get(f'{self.CT_URL}?per_page={str(count)}').json()) if 'tag_name' in release]
 
     def get_tool(self, version, install_dir, temp_dir):
         """
@@ -135,8 +135,8 @@ class CtInstaller(QObject):
         if not data or 'download' not in data:
             return False
 
-        protondir = install_dir + 'lutris-ge-' + data['version'].replace('GE-', '').lower() + '-x86_64'
-        checksum_dir = protondir + '/sha512sum'
+        protondir = f'{install_dir}lutris-ge-' + data['version'].replace('GE-', '').lower() + '-x86_64'
+        checksum_dir = f'{protondir}/sha512sum'
         source_checksum = self.rs.get(data['checksum']).text if 'checksum' in data else None
         local_checksum = open(checksum_dir).read() if os.path.exists(checksum_dir) else None
 
@@ -157,7 +157,7 @@ class CtInstaller(QObject):
         download_checksum = self.__sha512sum(destination)
         if source_checksum and (download_checksum not in source_checksum):
             return False
-        
+
         if os.path.exists(protondir):
             shutil.rmtree(protondir)
         tarfile.open(destination, "r:xz").extractall(install_dir)

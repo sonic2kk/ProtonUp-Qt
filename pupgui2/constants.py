@@ -1,10 +1,12 @@
 import os
 from xdg.BaseDirectory import xdg_config_home
-from PySide6.QtCore import QObject, Qt
+
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPalette
 
+
 APP_NAME = 'ProtonUp-Qt'
-APP_VERSION = '2.7.4'
+APP_VERSION = '2.7.7'
 APP_GHAPI_URL = 'https://api.github.com/repos/Davidotek/ProtonUp-qt/releases'
 DAVIDOTEK_KOFI_URL = 'https://ko-fi.com/davidotek'
 PROTONUPQT_GITHUB_URL = 'https://github.com/DavidoTek/ProtonUp-Qt'
@@ -27,8 +29,8 @@ for steam_root in _POSSIBLE_STEAM_ROOTS:
         break
 
 POSSIBLE_INSTALL_LOCATIONS = [
-    {'install_dir': _STEAM_ROOT + '/compatibilitytools.d/', 'display_name': 'Steam', 'launcher': 'steam', 'type': 'native', 'icon': 'steam', 'vdf_dir': _STEAM_ROOT + '/config'},
-    {'install_dir': '~/.var/app/com.valvesoftware.Steam/data/Steam/compatibilitytools.d/', 'display_name': 'Steam Flatpak', 'launcher': 'steam', 'type': 'flatpak', 'icon': 'steam'},
+    {'install_dir': f'{_STEAM_ROOT}/compatibilitytools.d/', 'display_name': 'Steam', 'launcher': 'steam', 'type': 'native', 'icon': 'steam', 'vdf_dir': f'{_STEAM_ROOT}/config'},
+    {'install_dir': '~/.var/app/com.valvesoftware.Steam/data/Steam/compatibilitytools.d/', 'display_name': 'Steam Flatpak', 'launcher': 'steam', 'type': 'flatpak', 'icon': 'steam', 'vdf_dir': '~/.var/app/com.valvesoftware.Steam/.local/share/Steam/config'},
     {'install_dir': '~/snap/steam/common/.steam/root/compatibilitytools.d/', 'display_name': 'Steam Snap', 'launcher': 'steam', 'type': 'snap', 'icon': 'steam', 'vdf_dir': '~/snap/steam/common/.steam/root/config'},
     {'install_dir': '~/.local/share/lutris/runners/wine/', 'display_name': 'Lutris', 'launcher': 'lutris', 'type': 'native', 'icon': 'lutris', 'config_dir': '~/.config/lutris'},
     {'install_dir': '~/.var/app/net.lutris.Lutris/data/lutris/runners/wine/', 'display_name': 'Lutris Flatpak', 'launcher': 'lutris', 'type': 'flatpak', 'icon': 'lutris', 'config_dir': '~/.var/app/net.lutris.Lutris/config/lutris'},
@@ -58,10 +60,15 @@ def PALETTE_DARK():
     palette_dark.setColor(QPalette.HighlightedText, Qt.black)
     return palette_dark
 
+PROTONDB_COLORS = {'platinum': '#b4c7dc', 'gold': '#4f492c', 'silver': '#a6a6a6', 'bronze': '#cd7f32', 'borked': '#ff0000'}
+
 STEAM_API_GETAPPLIST_URL = 'https://api.steampowered.com/ISteamApps/GetAppList/v2/'
 STEAM_APP_PAGE_URL = 'https://store.steampowered.com/app/'
 AWACY_GAME_LIST_URL = 'https://raw.githubusercontent.com/Starz0r/AreWeAntiCheatYet/master/games.json'
+AWACY_WEB_URL = 'https://areweanticheatyet.com/'
 LOCAL_AWACY_GAME_LIST = os.path.join(TEMP_DIR, 'awacy_games.json')
+PROTONDB_API_URL = 'https://www.protondb.com/api/v1/reports/summaries/{game_id}.json'
+PROTONDB_APP_PAGE_URL = 'https://protondb.com/app/'
 
 STEAM_BOXTRON_FLATPAK_APPSTREAM = 'appstream://com.valvesoftware.Steam.CompatibilityTool.Boxtron'
 STEAM_PROTONGE_FLATPAK_APPSTREAM = 'appstream://com.valvesoftware.Steam.CompatibilityTool.Proton-GE'
@@ -73,3 +80,5 @@ STEAM_STL_CACHE_PATH = os.path.join(os.path.expanduser('~'), '.cache', 'steamtin
 STEAM_STL_DATA_PATH = os.path.join(os.path.expanduser('~'), '.local', 'share', 'steamtinkerlaunch')
 STEAM_STL_SHELL_FILES = [ '.bashrc', '.zshrc', '.kshrc' ]
 STEAM_STL_FISH_VARIABLES = os.path.join(os.path.expanduser('~'), '.config/fish/fish_variables')
+
+LUTRIS_WEB_URL='https://lutris.net/games/'

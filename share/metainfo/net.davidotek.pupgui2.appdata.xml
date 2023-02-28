@@ -7,6 +7,7 @@
   <summary xml:lang="de_DE">Wine und Proton Kompatibilitätstools installieren</summary>
   <summary xml:lang="nl_NL">Installeer op Wine en Proton gebaseerde compatibiliteitshulpmiddelen</summary>
   <summary xml:lang="pl_PL">Zainstaluj narzędzia kompatybilności oparte na Wine i Protonie</summary>
+  <summary xml:lang="zh_TW">安裝基於 Win 和 Proton 的相容工具</summary>
 
   <keywords>
     <keyword>Proton-GE</keyword>
@@ -37,10 +38,14 @@
       <li>Luxtorpeda</li>
       <li>Boxtron</li>
       <li>Roberta</li>
+      <li>NorthstarProton</li>
+      <li>Scrumplex's Steam-Play-None</li>
       <li>Wine-GE</li>
       <li>Lutris-Wine</li>
       <li>Kron4ek's Vanilla Wine-Builds</li>
       <li>DXVK and DXVK async</li>
+      <li>D8VK</li>
+      <li>VKD3D</li>
     </ul>
     <p>Double click compatibility tools to show more information and games using the tool.</p>
     <p>Advanced settings and the color theme can be managed in the About dialog.</p>
@@ -63,6 +68,45 @@
   <content_rating type="oars-1.0" />
 
   <releases>
+    <release version="2.7.7" date="2022-12-24">
+      <description>
+        <p>Changes:</p>
+        <ul>
+          <li>Add NorthstarProton compatibility tool</li>
+          <li>Add Steam-Play-None compatibility tool</li>
+          <li>Add D8VK for Lutris</li>
+          <li>Add VKD3D for Lutris</li>
+          <li>Add ProtonDB ratings to the game list</li>
+          <li>Add indicator if ProtonUp-Qt can't connect to the internet</li>
+        </ul>
+        <p>Bug fixes:</p>
+        <ul>
+          <li>Fix game list for Steam Flatpak</li>
+          <li>Fix that new Steam config file versions are not detected</li>
+        </ul>
+      </description>
+    </release>
+    <release version="2.7.6" date="2022-11-21">
+      <description>
+        <ul>
+          <li>Fixed downloading DXVK 2.0 for Lutris</li>
+          <li>Improvements when installing STL using the ProtonUp-Qt Flatpak</li>
+          <li>Reworked the Info dialog</li>
+          <li>Improved the Lutris game detection</li>
+        </ul>
+        <p>Thanks also go to sonic2kk!</p>
+      </description>
+    </release>
+    <release version="2.7.5" date="2022-11-14">
+      <description>
+        <ul>
+          <li>Many SteamTinkerLaunch improvements, see PR#125 <a href="https://github.com/DavidoTek/ProtonUp-Qt/pull/125">here</a></li>
+          <li>ProtonUp-Qt Flatpak improvements</li>
+          <li>Added Traditional Chinese translation</li>
+          <li>Various small changes to enhance the experience of ProtonUp-Qt</li>
+        </ul>
+      </description>
+    </release>
     <release version="2.7.4" date="2022-09-23">
       <description>
         <p>Added support for installing SteamTinkerLaunch</p>

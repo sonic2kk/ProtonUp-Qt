@@ -1,27 +1,28 @@
 # pupgui2 compatibility tools module
-# Luxtorpeda
-# Copyright (C) 2021 DavidoTek, partially based on AUNaseef's protonup
+# D8VK for Lutris (nightly version): https://github.com/AlpyneDreams/d8vk/
+# Copyright (C) 2022 DavidoTek, partially based on AUNaseef's protonup
 
 import os
 import shutil
-import tarfile
 import requests
+import zipfile
 
 from PySide6.QtCore import QObject, QCoreApplication, Signal, Property
 
 from pupgui2.util import ghapi_rlcheck
 
 
-CT_NAME = 'Luxtorpeda'
-CT_LAUNCHERS = ['steam']
-CT_DESCRIPTION = {'en': QCoreApplication.instance().translate('ctmod_luxtorpeda', '''Luxtorpeda provides Linux-native game engines for specific Windows-only games.''')}
+CT_NAME = 'D8VK (nightly)'
+CT_LAUNCHERS = ['lutris', 'advmode']
+CT_DESCRIPTION = {}
+CT_DESCRIPTION['en'] = QCoreApplication.instance().translate('ctmod_d8vk', '''Vulkan-based implementation of Direct3D 8/9/10/11 (Nightly).<br/><br/><b>Warning: Nightly version is unstable, use with caution!</b>''')
 
 
 class CtInstaller(QObject):
 
     BUFFER_SIZE = 65536
-    CT_URL = 'https://api.github.com/repos/luxtorpeda-dev/luxtorpeda/releases'
-    CT_INFO_URL = 'https://github.com/luxtorpeda-dev/luxtorpeda/releases/tag/'
+    CT_URL = 'https://api.github.com/repos/AlpyneDreams/d8vk/actions/artifacts'
+    CT_INFO_URL = 'https://github.com/AlpyneDreams/d8vk/commit/'
 
     p_download_progress_percent = 0
     download_progress_percent = Signal(int)
@@ -29,7 +30,7 @@ class CtInstaller(QObject):
     def __init__(self, main_window = None):
         super(CtInstaller, self).__init__()
         self.p_download_canceled = False
-        self.rs = main_window.rs or requests.Session()
+        self.rs = main_window.rs if main_window.rs else requests.Session()
 
     def get_download_canceled(self):
         return self.p_download_canceled
@@ -45,7 +46,8 @@ class CtInstaller(QObject):
         self.p_download_progress_percent = value
         self.download_progress_percent.emit(value)
 
-    def __download(self, url, destination):
+    def __download(self, url, destination, f_size):
+        # f_size in argumentbecause artifacts don't have Content-Length.
         """
         Download files from url to destination
         Return Type: bool
@@ -56,7 +58,6 @@ class CtInstaller(QObject):
             return False
 
         self.__set_download_progress_percent(1) # 1 download started
-        f_size = int(file.headers.get('content-length'))
         c_count = int(f_size / self.BUFFER_SIZE)
         c_current = 1
         destination = os.path.expanduser(destination)
@@ -75,23 +76,33 @@ class CtInstaller(QObject):
         self.__set_download_progress_percent(99) # 99 download complete
         return True
 
+    def __get_artifact_from_commit(self, commit):
+        """
+        Get artifact from commit
+        Return Type: str
+        """
+        for artifact in self.rs.get(self.CT_URL + '?per_page=100').json()["artifacts"]:
+            if artifact['workflow_run']['head_sha'][:len(commit)] == commit and 'd8vk' in artifact['name']:  # Only get D8VK artifacts and not DXVK native artifacts
+                artifact['workflow_run']['head_sha'] = commit
+                return artifact
+        return None
+
     def __fetch_github_data(self, tag):
         """
         Fetch GitHub release information
         Return Type: dict
         Content(s):
-            'version', 'date', 'download', 'size'
+            'version', 'date', 'download', 'size', 'checksum'
         """
-        url = self.CT_URL + (f'/tags/{tag}' if tag else '/latest')
-        data = requests.get(url).json()
-        if 'tag_name' not in data:
-            return None
-
-        values = {'version': data['tag_name'], 'date': data['published_at'].split('T')[0]}
-        for asset in data['assets']:
-            if asset['name'].endswith('tar.xz'):
-                values['download'] = asset['browser_download_url']
-                values['size'] = asset['size']
+        # Tag in this case is the commit hash.
+        data = self.__get_artifact_from_commit(tag)
+        if not data:
+            return
+        values = {'version': data['workflow_run']['head_sha'][:7], 'date': data['updated_at'].split('T')[0]}
+        values['download'] = "https://nightly.link/AlpyneDreams/d8vk/actions/runs/{}/{}.zip".format(
+            data["workflow_run"]["id"],  data["name"]
+        )
+        values['size'] = data['size_in_bytes']
         return values
 
     def is_system_compatible(self):
@@ -106,7 +117,14 @@ class CtInstaller(QObject):
         List available releases
         Return Type: str[]
         """
-        return [release['tag_name'] for release in ghapi_rlcheck(requests.get(f'{self.CT_URL}?per_page={str(count)}').json()) if 'tag_name' in release]
+        tags = []
+        for artifact in ghapi_rlcheck(self.rs.get(self.CT_URL + '?per_page=' + str(count)).json()).get("artifacts", {}):
+            workflow = artifact['workflow_run']
+            if not workflow["head_branch"] == "master" or artifact["expired"]:
+                continue
+            if workflow['head_sha'][:7] not in tags:  # Downloads wrong releases sometimes? Folder structure looks wrong -- Maybe wrong one downloaded from nightly link or wrong suite? (maybe only ever other entry is right and we're filtering the "proper" ones)
+                tags.append(workflow['head_sha'][:7])
+        return tags
 
     def get_tool(self, version, install_dir, temp_dir):
         """
@@ -114,27 +132,22 @@ class CtInstaller(QObject):
         Return Type: bool
         """
         data = self.__fetch_github_data(version)
-
         if not data or 'download' not in data:
             return False
 
-        protondir = f'{install_dir}luxtorpeda'
-
+        dxvk_dir = os.path.join(install_dir, '../../runtime/dxvk')
+        dxvk_install_dir = os.path.join(dxvk_dir, 'd8vk-git-' + data['version'])
         destination = temp_dir
         destination += data['download'].split('/')[-1]
         destination = destination
 
-        if not self.__download(url=data['download'], destination=destination):
+        if not self.__download(url=data['download'], destination=destination, f_size=data['size']):
             return False
 
-        if os.path.exists(protondir):
-            shutil.rmtree(protondir)
-        tarfile.open(destination, "r:xz").extractall(install_dir)
-
-        if os.path.exists(protondir):
-            with open(os.path.join(protondir, 'VERSION.txt'), 'w') as f:
-                f.write(version)
-                f.write('\n')
+        if os.path.exists(dxvk_dir + 'd8vk-git-' + data['version']):
+            shutil.rmtree(dxvk_dir + 'd8vk-git-' + data['version'])
+        with zipfile.ZipFile(destination) as zip:
+            zip.extractall(dxvk_install_dir)
 
         self.__set_download_progress_percent(100)
 

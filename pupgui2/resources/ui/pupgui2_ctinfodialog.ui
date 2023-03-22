@@ -17,6 +17,9 @@
    <iconset theme="pupgui2">
     <normaloff>.</normaloff>.</iconset>
   </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <layout class="QFormLayout" name="formLayout">

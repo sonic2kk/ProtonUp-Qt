@@ -3,7 +3,7 @@
  <class>PupguiGameListDialog</class>
  <widget class="QDialog" name="PupguiGameListDialog">
   <property name="windowModality">
-   <enum>Qt::ApplicationModal</enum>
+   <enum>Qt::NonModal</enum>
   </property>
   <property name="geometry">
    <rect>
@@ -15,6 +15,9 @@
   </property>
   <property name="windowTitle">
    <string>Game List</string>
+  </property>
+  <property name="modal">
+   <bool>true</bool>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>

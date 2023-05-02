@@ -176,6 +176,19 @@
         </property>
        </spacer>
       </item>
+      <item>
+       <widget class="QToolButton" name="btnBrowse">
+        <property name="toolTip">
+         <string>Open Launcher Directory</string>
+        </property>
+        <property name="text">
+         <string>...</string>
+        </property>
+        <property name="icon">
+         <iconset theme="folder-open"/>
+        </property>
+       </widget>
+      </item>
      </layout>
     </item>
     <item>

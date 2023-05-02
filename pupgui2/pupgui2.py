@@ -137,6 +137,7 @@ class MainWindow(QObject):
         self.ui.listInstalledVersions.itemSelectionChanged.connect(self.list_installed_versions_item_selection_changed)
         self.ui.btnShowCtInfo.clicked.connect(self.btn_show_ct_info_clicked)
         self.ui.btnSteamFlatpakCtools.clicked.connect(self.btn_steam_flatpak_ctools_clicked)
+        self.ui.btnBrowse.clicked.connect(lambda: os.system(f'xdg-open "{install_directory()}"'))
 
         self.ui.btnRemoveSelected.setEnabled(False)
         self.ui.btnShowCtInfo.setEnabled(False)

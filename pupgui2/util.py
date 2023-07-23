@@ -650,3 +650,20 @@ def get_github_action_artifact_from_commit(url, commit, rs = requests.Session())
         if short_artifact_hash == commit:
             artifact['workflow_run']['head_sha'] = short_artifact_hash
             return artifact
+
+
+def get_nightlylink_github_data(artifact) -> str:
+    """
+    Return a nightly.link download link for a GitHub artifact.
+    Return Type: str
+    """
+
+    try:
+        repo_name_with_author = artifact['url'].split('https://api.github.com/repos/')[1].split('/actions')[0]  # Ugly
+        workflow_run_id = artifact['workflow_run']['id']
+        artifact_name = artifact['name']
+
+        return f'https://nightly.link/{repo_name_with_author}/actions/runs/{workflow_run_id}/{artifact_name}.zip'
+    except Exception:
+        print('Invalid artifact passed')
+        return ''

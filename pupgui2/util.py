@@ -635,3 +635,18 @@ def extract_tar_zst(zst_path: str, extract_path: str) -> bool:
         print(f'Could not extract archive \'{zst_path}\': {e}')
 
     return False
+
+
+## Network utilitioes ##
+
+
+def get_github_action_artifact_from_commit(url, commit, rs = requests.Session()):
+    """
+    Get GitHub Actions artifact from commit hash using requests
+    """
+
+    for artifact in rs.get(url).json()['artifacts']:
+        short_artifact_hash = artifact['workflow_run']['head_sha'][:len(commit)]
+        if short_artifact_hash == commit:
+            artifact['workflow_run']['head_sha'] = short_artifact_hash
+            return artifact

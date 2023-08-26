@@ -8,6 +8,7 @@ import webbrowser
 import requests
 import zipfile
 import tarfile
+import hashlib
 
 import zstandard
 

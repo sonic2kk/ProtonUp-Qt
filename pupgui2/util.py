@@ -8,6 +8,7 @@ import webbrowser
 import requests
 import zipfile
 import tarfile
+import re
 
 import zstandard
 
@@ -20,6 +21,7 @@ from PySide6.QtWidgets import QApplication, QStyleFactory, QMessageBox, QCheckBo
 
 from pupgui2.constants import POSSIBLE_INSTALL_LOCATIONS, CONFIG_FILE, PALETTE_DARK, TEMP_DIR
 from pupgui2.constants import AWACY_GAME_LIST_URL, LOCAL_AWACY_GAME_LIST
+from pupgui2.constants import GE_VERSION_REGEX, OLD_GE_VERSION_REGEX, DXVK_VKD3D_VERSION_REGEX, WINE_TKG_VERSION_REGEX
 from pupgui2.datastructures import BasicCompatTool, CTType
 from pupgui2.steamutil import remove_steamtinkerlaunch
 
@@ -654,3 +656,59 @@ def extract_tar_zst(zst_path: str, extract_path: str) -> bool:
         print(f'Could not extract archive \'{zst_path}\': {e}')
 
     return False
+
+
+def get_ctmod_ver(ctmod_name: str) -> str:
+
+    def sanitise_tkg_version(tkg_name: str) -> str:
+        
+        """
+        Parse a Wine-tkg/Proton-tkg name string and extract the version from it.
+        Return Type: str
+        """
+
+        sanitised_name = re.sub('^\D*', '', tkg_name)  # Remove everything before the first number in the name, strips things like 'wine-tkg-fsync-git'
+        sanitised_name = re.sub('-x86_64.*', '', sanitised_name)  # Remove potential x86_64 and everything after, leaving us with only the version string
+
+        return sanitised_name
+
+    """
+    Parse the ctmod version from its name using regular expressions.
+    Return Type: str
+    """
+
+    version_pattern: str = ''
+    ctmod_name = ctmod_name.lower()
+    
+    ge_prefixes = [ 'wine-ge', 'lutris-ge', 'ge-proton' ]
+    
+    # Checks which pattern to match against by inferring ctmod type based on how it is named
+    # Is this safe? It could end up being brittle, and the regex may not be bullet-proof...
+    # This may need some battle testing!
+    if any(prefix in ctmod_name for prefix in ge_prefixes):
+        # Modern GE-Proton/Wine-GE naming schemes
+        version_pattern = GE_VERSION_REGEX
+    elif 'Proton-' in ctmod_name and '-GE-' in ctmod_name:
+        # Older Proton-X.Y-GE-Z naming scheme
+        version_pattern = OLD_GE_VERSION_REGEX
+    elif 'dxvk-' in ctmod_name or 'vkd3d-' in ctmod_name:
+        # DXVK/vkd3d naming pattern
+        version_pattern = DXVK_VKD3D_VERSION_REGEX
+    elif 'wine-tkg' in ctmod_name or 'proton_tkg' in ctmod_name:
+        ctmod_name = sanitise_tkg_version(ctmod_name)
+        version_pattern = WINE_TKG_VERSION_REGEX
+    else:
+        # TODO steam: steamtinkerlaunch?/boxtron/luxtorpeda/northstar proton/steam-play-none?
+        # TODO heroic: kron4ek/d8vk/lutris-wine/dxvk-nightly
+        
+        return ''
+
+    # Use selected pattern to find version from string -- Assume if match is not None that we got a regex match 
+    version_match = re.search(version_pattern, ctmod_name)
+    if version_match is not None:
+        return version_match[0]
+
+    return ''
+
+
+# def create_latest_ctmod_symlink()

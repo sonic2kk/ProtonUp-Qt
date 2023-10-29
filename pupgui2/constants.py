@@ -89,3 +89,9 @@ STEAM_STL_FISH_VARIABLES = os.path.join(HOME_DIR, '.config/fish/fish_variables')
 
 LUTRIS_WEB_URL = 'https://lutris.net/games/'
 EPIC_STORE_URL = 'https://store.epicgames.com/p/'
+
+# May need to change/create new patterns (perhaps a regex 'or' check) if the versioning patterns change
+GE_VERSION_REGEX = '[0-9]+-[0-9]+.*?'  # GE-ProtonX-YY, lutris-GE-Protonx-yy-x86-64, wine-ge-x-yy-x86_64
+OLD_GE_VERSION_REGEX = '[0-9]+.[0-9]+.*?-[a-zA-Z]+-[0-9]+'  # Proton-X.Y-GE-Z
+DXVK_VKD3D_VERSION_REGEX = '[0-9]+.[0-9]+.*'  # dxvk-v2.3, dxvk-2.0, vkd3d-proton-2.10
+WINE_TKG_VERSION_REGEX = '[a-zA-Z0-9]+.*'

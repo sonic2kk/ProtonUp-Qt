@@ -23,6 +23,7 @@ from pupgui2.pupgui2exceptionhandler import PupguiExceptionHandler
 from pupgui2.pupgui2gamelistdialog import PupguiGameListDialog
 from pupgui2.pupgui2installdialog import PupguiInstallDialog
 from pupgui2.steamutil import get_steam_acruntime_list, get_steam_app_list, get_steam_ct_game_map, get_steam_global_ctool_name, ctool_is_runtime_for_app
+from pupgui2.lutrisutil import get_lutris_global_version
 from pupgui2.heroicutil import is_heroic_launcher, get_heroic_game_list
 from pupgui2.util import apply_dark_theme, create_compatibilitytools_folder, get_installed_ctools, remove_ctool
 from pupgui2.util import install_directory, available_install_directories, get_install_location_from_directory_name
@@ -224,6 +225,10 @@ class MainWindow(QObject):
 
             self.get_installed_versions('dxvk', dxvk_dir)
             self.get_installed_versions('vkd3d', vkd3d_dir)
+
+            # print(get_lutris_global_version('wine'))
+            # print(get_lutris_global_version('dxvk'))
+
         # Launcher specific (Steam): Number of games using the compatibility tool
         elif install_loc.get('launcher') == 'steam' and 'vdf_dir' in install_loc:
             steam_app_list = get_steam_app_list(install_loc.get('vdf_dir'), cached=False)  # update app list cache

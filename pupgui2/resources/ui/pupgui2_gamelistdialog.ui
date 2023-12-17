@@ -53,6 +53,37 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
+      <widget class="QPushButton" name="btnShortcutEditor">
+       <property name="text">
+        <string>Shortcut Editor</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnRefreshGames">
+       <property name="toolTip">
+        <string>Refresh Games</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset theme="view-refresh">
+         <normaloff>.</normaloff>.</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnSearch">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset theme="search"/>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QLabel" name="lblSteamRunningWarning">
        <property name="styleSheet">
         <string notr="true">QLabel { color: orange; }</string>
@@ -86,37 +117,16 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="btnRefreshGames">
-       <property name="toolTip">
-        <string>Refresh Games</string>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="icon">
-        <iconset theme="view-refresh">
-         <normaloff>.</normaloff>.</iconset>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnShortcutEditor">
-       <property name="text">
-        <string>Shortcut Editor</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnSearch">
-       <property name="text">
-        <string>Search</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="btnApply">
        <property name="text">
         <string>Apply</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnClose">
+       <property name="text">
+        <string>Close</string>
        </property>
       </widget>
      </item>
@@ -126,9 +136,7 @@
  </widget>
  <tabstops>
   <tabstop>btnApply</tabstop>
-  <tabstop>btnSearch</tabstop>
   <tabstop>searchBox</tabstop>
-  <tabstop>btnRefreshGames</tabstop>
  </tabstops>
  <resources/>
  <connections/>

@@ -21,6 +21,16 @@ from pupgui2.util import list_installed_ctools, sort_compatibility_tool_names, o
 from pupgui2.util import get_install_location_from_directory_name
 
 
+## CHANGES
+## ------
+## * Moved position of Shortcut Editor/Refresh/Search buttons
+## * Added dedicated "Close" button instead of re-using Close/Apply button, to allow easier cancelling of edited games list items in cases where CSD is not available i.e. GameScope
+
+## TO-DO
+## -----
+## * Highlight edited rows in bold
+
+
 class PupguiGameListDialog(QObject):
 
     game_property_changed = Signal(bool)
@@ -59,7 +69,7 @@ class PupguiGameListDialog(QObject):
         self.ui.btnSearch.setVisible(False)
         self.ui.searchBox.setVisible(False)  # Hide searchbox by default
 
-        self.set_apply_btn_text()
+        # self.set_apply_btn_text()
         self.ui.setWindowTitle(self.tr('Game List for {LAUNCHER}').format(LAUNCHER=self.launcher.capitalize() if not is_heroic_launcher(self.launcher) else 'Heroic'))
 
         self.ui.lblSteamRunningWarning.setVisible(self.should_show_steam_warning)  # Only show warning if Steam is running, and make it grey if we're running in Flatpak
@@ -67,6 +77,7 @@ class PupguiGameListDialog(QObject):
 
         self.ui.tableGames.itemDoubleClicked.connect(self.item_doubleclick_action)
         self.ui.btnApply.clicked.connect(self.btn_apply_clicked)
+        self.ui.btnClose.clicked.connect(lambda: self.ui.close())
         self.ui.btnSearch.clicked.connect(self.btn_search_clicked)
         self.ui.btnRefreshGames.clicked.connect(self.btn_refresh_games_clicked)
         self.ui.btnShortcutEditor.clicked.connect(self.btn_shortcut_editor_clicked)
@@ -278,11 +289,11 @@ class PupguiGameListDialog(QObject):
             self.ui.tableGames.setItem(i, 2, install_path_item)
             self.ui.tableGames.setItem(i, 3, runner_item)
 
-    def set_apply_btn_text(self):
-        """ Set text for Apply button to 'Close' if the games list is empty, if the current launcher is not Steam or if there are no queued changes."""
+    # def set_apply_btn_text(self):
+    #     """ Set text for Apply button to 'Close' if the games list is empty, if the current launcher is not Steam or if there are no queued changes."""
 
-        txt = self.tr('Close') if len(self.games) <= 0 or self.launcher != 'steam' or len(self.queued_changes) <= 0 else self.tr('Apply')
-        self.ui.btnApply.setText(txt)
+    #     txt = self.tr('Close') if len(self.games) <= 0 or self.launcher != 'steam' or len(self.queued_changes) <= 0 else self.tr('Apply')
+    #     self.ui.btnApply.setText(txt)
 
     def btn_apply_clicked(self):
         self.update_queued_ctools_steam()
@@ -299,7 +310,7 @@ class PupguiGameListDialog(QObject):
 
     def btn_search_clicked(self):
         self.ui.searchBox.setVisible(not self.ui.searchBox.isVisible())
-        self.ui.btnSearch.setText(self.tr('Done') if self.ui.searchBox.isVisible() else self.tr('Search'))  # "Done" is not good text, try something else
+        # self.ui.btnSearch.setText(self.tr('Done') if self.ui.searchBox.isVisible() else self.tr('Search'))  # "Done" is not good text, try something else
         self.ui.lblSteamRunningWarning.setVisible(self.should_show_steam_warning and not self.ui.searchBox.isVisible())
         self.ui.searchBox.setFocus()
 
@@ -342,7 +353,7 @@ class PupguiGameListDialog(QObject):
 
         self.queued_changes[game] = ctool_name
         self.ui.tableGames.item(self.ui.tableGames.currentRow(), 1).setData(Qt.DisplayRole, ctool_name)
-        self.set_apply_btn_text()
+        # self.set_apply_btn_text()
 
     def update_queued_ctools_steam(self):
         """ update the compatibility tools for all queued games (Steam) """

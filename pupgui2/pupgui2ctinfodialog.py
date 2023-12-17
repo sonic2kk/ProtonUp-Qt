@@ -123,6 +123,7 @@ class PupguiCtInfoDialog(QObject):
         self.ui.btnBatchUpdate.setEnabled(len(self.games) > 0 and not self.ctool.is_global)
         self.ui.btnSearch.setEnabled(len(self.games) > 0 and not self.ctool.is_global)
 
+        # Do we want to display this for Lutris?
         if self.ctool.is_global:
             self.ui.lblGamesList.setText(self.tr('Tool is Global'))
 

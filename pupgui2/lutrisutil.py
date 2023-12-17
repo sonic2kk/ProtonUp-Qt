@@ -83,8 +83,15 @@ def get_lutris_global_version(name: str) -> str:
 
         # Elegantly handle cases where list of tools for a runner is empty
         runner_versions: List[Dict] = versions_json.get('runners', {}).get(name, [])
-        runner_version: str = runner_versions[0].get('version', '') if runner_versions else ''
+        runner_version_dict = runner_versions[0] if runner_versions else {}
+        runner_version: str = runner_version_dict.get('version', '')
+        runner_architecture: str = runner_version_dict.get('architecture', '')
+
+        # Append '-{runner_architecture}' if it exists, otherwise leave it out
+        # This is because if there is an architecture, lutris includes it in the displayname
+        # ex: wine-ge-8-25 becomes wine-ge-8-25-x86_64
+        runner_version_str: str = runner_version + ( f'-{runner_architecture}' if runner_architecture else '' )
 
         runtime_version: str = versions_json.get('runtimes', {}).get(name, {}).get('version', '')
 
-        return runner_version or runtime_version or ''
+        return runner_version_str or runtime_version

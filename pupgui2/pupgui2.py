@@ -5,6 +5,8 @@ import pkgutil
 import subprocess
 import threading
 
+from typing import List
+
 from PySide6.QtCore import Qt, QCoreApplication, QObject, QThread, QWaitCondition, QMutex, QDataStream
 from PySide6.QtCore import QByteArray, QEvent, Signal, Slot, QTranslator, QLocale, QLibraryInfo
 from PySide6.QtGui import QIcon, QKeyEvent, QKeySequence, QShortcut
@@ -14,7 +16,7 @@ from PySide6.QtUiTools import QUiLoader
 from pupgui2.constants import APP_NAME, APP_VERSION, BUILD_INFO, TEMP_DIR, STEAM_STL_INSTALL_PATH
 from pupgui2.constants import STEAM_BOXTRON_FLATPAK_APPSTREAM, STEAM_STL_FLATPAK_APPSTREAM
 from pupgui2 import ctloader
-from pupgui2.datastructures import CTType, MsgBoxType, MsgBoxResult
+from pupgui2.datastructures import CTType, MsgBoxType, MsgBoxResult, BasicCompatTool
 from pupgui2.gamepadinputworker import GamepadInputWorker
 from pupgui2.pupgui2aboutdialog import PupguiAboutDialog
 from pupgui2.pupgui2ctinfodialog import PupguiCtInfoDialog
@@ -226,8 +228,11 @@ class MainWindow(QObject):
             self.get_installed_versions('dxvk', dxvk_dir)
             self.get_installed_versions('vkd3d', vkd3d_dir)
 
-            # print(get_lutris_global_version('wine'))
-            # print(get_lutris_global_version('dxvk'))
+            lutris_global_wine = get_lutris_global_version('wine')
+            for ct in self.compat_tool_index_map:
+                # Doesn't work because ct.get_displayname() / ct.get_internal_name() has the '-
+                if ct.get_displayname() == lutris_global_wine:
+                    self.set_global_ctool(ct, self.compat_tool_index_map)
 
         # Launcher specific (Steam): Number of games using the compatibility tool
         elif install_loc.get('launcher') == 'steam' and 'vdf_dir' in install_loc:
@@ -239,8 +244,7 @@ class MainWindow(QObject):
                 ct.no_games = len(ct_game_map.get(ct, []))
                 ct_name = ct.get_internal_name()
                 if ct_name == global_ctool_name:
-                    ct.set_global()  # Set (global) text
-                    self.compat_tool_index_map.insert(0, self.compat_tool_index_map.pop(self.compat_tool_index_map.index(ct)))  # Move global ctool to top of list
+                    self.set_global_ctool(ct, self.compat_tool_index_map)
                 # Runtime length has to be calculated separately as they are not stored in the compat_tool_index_map, runtimes are dependencies of apps and not selected compatibility tools
                 if ct.ct_type == CTType.STEAM_RT:
                     ct.no_games += len([game for game in steam_app_list if ctool_is_runtime_for_app(game, ct)])
@@ -281,6 +285,12 @@ class MainWindow(QObject):
 
         self.ui.txtUnusedVersions.setText(self.tr('Unused: {unused_ctools}').format(unused_ctools=unused_ctools) if unused_ctools > 0 else '')
         self.ui.txtInstalledVersions.setText(f'{len(self.compat_tool_index_map)}')
+
+    def set_global_ctool(self, ct: BasicCompatTool, compat_tool_index_map: List[BasicCompatTool]):
+        """ Mark a given compatibility tool 'ct' as Global and move it to the beginning of the compat_tool_index_map """
+
+        ct.set_global()
+        compat_tool_index_map.insert(0, compat_tool_index_map.pop(compat_tool_index_map.index(ct)))  # Move global ctool to top of list
 
     def get_installed_versions(self, ctool_name, ctool_dir):
         for ct in get_installed_ctools(ctool_dir):

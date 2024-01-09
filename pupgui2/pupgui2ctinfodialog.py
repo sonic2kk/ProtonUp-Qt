@@ -154,6 +154,7 @@ class PupguiCtInfoDialog(QObject):
         self.ui.searchBox.setVisible(not self.ui.searchBox.isVisible())
         self.ui.btnBatchUpdate.setVisible(self.is_batch_update_available and not self.ui.searchBox.isVisible())
         self.ui.searchBox.setFocus()
+        self.ui.btnSearch.setFocus()
 
         self.search_ctinfo_games(self.ui.searchBox.text() if self.ui.searchBox.isVisible() else '')
 

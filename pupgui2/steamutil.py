@@ -1,4 +1,5 @@
 import os
+from re import search
 from typing import Dict, List, Union
 import shutil
 import subprocess
@@ -8,6 +9,8 @@ import requests
 import threading
 import pkgutil
 import binascii
+import struct
+import time
 from steam.utils.appcache import parse_appinfo
 
 from PySide6.QtCore import Signal
@@ -257,11 +260,24 @@ def _get_steam_ctool_info(steam_config_folder: str) -> Dict[str, Dict[str, str]]
     compat_tools = {}
     try:
         with open(appinfo_file, 'rb') as f:
-            header, apps = parse_appinfo(f)
-            for steam_app in apps:
-                if steam_app.get('appid') == 891390:
-                    compat_tools = steam_app.get('data').get('appinfo').get('extended').get('compat_tools')
-                    break
+            start_time = time.time()
+
+
+            # apps = fast_parse_appinfo(f, search_appid=891390)
+            compat_tools = get_appinfo_compat_tools(f)
+            # print(apps)
+            # compat_tools = apps[0]['data']['appinfo']['extended']['compat_tools']
+
+
+            # header, apps = parse_appinfo(f)
+            # for steam_app in apps:
+            #     if steam_app.get('appid') == 891390:
+            #         compat_tools = steam_app.get('data').get('appinfo').get('extended').get('compat_tools')
+            #         break
+            
+
+            end_time = time.time()
+            print(f'_get_steam_ctool_info took: {end_time - start_time}s')
     except Exception as e:
         print('Error getting ctool map from appinfo.vdf:', e)
     else:
@@ -285,6 +301,8 @@ def update_steamapp_info(steam_config_folder: str, steamapp_list: List[SteamApp]
     try:
         ctool_map = _get_steam_ctool_info(steam_config_folder)
         with open(appinfo_file, 'rb') as f:
+            start_time = time.time()
+            
             _, apps = parse_appinfo(f)
             for steam_app in apps:
                 appid_str = str(steam_app.get('appid'))
@@ -320,6 +338,9 @@ def update_steamapp_info(steam_config_folder: str, steamapp_list: List[SteamApp]
                     cnt += 1
                 if cnt == len_sapps:
                     break
+
+            end_time = time.time()
+            print(f'update_steamapp_info loop took: {end_time - start_time}s')
     except Exception as e:
         print('Error updating SteamApp info from appinfo.vdf:', e)
     return list(sapps.values())
@@ -809,3 +830,52 @@ def is_valid_steam_install(steam_path) -> bool:
     is_valid_steam_install = os.path.exists(config_vdf) and os.path.exists(libraryfolders_vdf)
 
     return is_valid_steam_install
+
+
+def fast_parse_appinfo(fp, search_appid = None):
+
+    """
+    Re-implement parse_appinfo from ValvePython/steam: https://github.com/ValvePython/steam
+
+    Dangerous for now!
+    """
+
+    uint32 = struct.Struct('<I')
+    magic = fp.read(4)
+    if magic not in (b"'DV\x07", b"(DV\x07"):
+        raise SyntaxError("Invalid magic, got %s" % repr(magic))
+
+    fp.read(4)
+    apps = []
+    while True:
+        appid = uint32.unpack(fp.read(4))[0]
+
+        if search_appid and appid != search_appid:
+            continue
+        if appid == 0:
+            break
+
+        app = {
+            'appid': appid,
+        }
+
+        # Skip ahead in file
+        fp.read(4 + 4 + 4 + 8 + 20 + 4)
+        if magic == b"(DV\x07":
+            app['data_sha1'] = fp.read(20)
+
+        # We only want the 'data' field
+        app['data'] = vdf.binary_load(fp)
+
+        if not search_appid: 
+            apps.append(app)
+        elif search_appid and appid == search_appid:
+            # Exit if we're searching for an appid and find it
+            apps.append(app)
+            break
+
+    return apps
+
+
+def get_appinfo_compat_tools(f):
+    return fast_parse_appinfo(f, search_appid=891390)[0]['data']['appinfo']['extended']['compat_tools']

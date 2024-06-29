@@ -1,5 +1,5 @@
 import os
-from xdg.BaseDirectory import xdg_config_home
+from xdg.BaseDirectory import xdg_config_home, xdg_cache_home
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPalette
@@ -20,7 +20,7 @@ Copyright (C) 2021-2024 DavidoTek, licensed under GPLv3
 BUILD_INFO = 'built from source'
 
 CONFIG_FILE = os.path.join(xdg_config_home, 'pupgui/config.ini')
-TEMP_DIR = os.path.join(os.getenv('XDG_CACHE_HOME'), 'tmp', 'pupgui2.a70200/') if os.path.exists(os.getenv('XDG_CACHE_HOME', '')) else '/tmp/pupgui2.a70200/'
+TEMP_DIR: str = os.path.join(xdg_cache_home, 'tmp', 'pupguo2.a70200')
 HOME_DIR = os.path.expanduser('~')
 
 # DBus constants

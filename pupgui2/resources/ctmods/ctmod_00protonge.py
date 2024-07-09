@@ -8,7 +8,8 @@ import hashlib
 
 from PySide6.QtCore import QObject, QCoreApplication, Signal, Property
 
-from pupgui2.util import ghapi_rlcheck, extract_tar
+from pupgui2.datastructures import Launcher
+from pupgui2.util import get_launcher_from_installdir, ghapi_rlcheck, extract_tar
 from pupgui2.util import build_headers_with_authorization
 
 
@@ -29,6 +30,8 @@ class CtInstaller(QObject):
     def __init__(self, main_window = None):
         super(CtInstaller, self).__init__()
         self.p_download_canceled = False
+
+        self.release_format = f'tar.gz'
 
         self.rs = requests.Session()
         rs_headers = build_headers_with_authorization({}, main_window.web_access_tokens, 'github')
@@ -92,6 +95,7 @@ class CtInstaller(QObject):
                 sha512sum.update(data)
         return sha512sum.hexdigest()
 
+    # TODO replace with network function
     def __fetch_github_data(self, tag):
         """
         Fetch GitHub release information
@@ -108,7 +112,7 @@ class CtInstaller(QObject):
         for asset in data['assets']:
             if asset['name'].endswith('sha512sum'):
                 values['checksum'] = asset['browser_download_url']
-            elif asset['name'].endswith('tar.gz'):
+            elif asset['name'].endswith(self.release_format):
                 values['download'] = asset['browser_download_url']
                 values['size'] = asset['size']
         return values
@@ -127,6 +131,7 @@ class CtInstaller(QObject):
         """
         return [release['tag_name'] for release in ghapi_rlcheck(self.rs.get(f'{self.CT_URL}?per_page={count}&page={page}').json()) if 'tag_name' in release]
 
+    # TODO test very old Proton versions (i.e old naming scheme, like Proton-GE-5.4)
     def get_tool(self, version, install_dir, temp_dir):
         """
         Download and install the compatibility tool
@@ -137,41 +142,88 @@ class CtInstaller(QObject):
         if not data or 'download' not in data:
             return False
 
-        protondir = os.path.join(install_dir, data['version'])
-        if not os.path.exists(protondir):
-            protondir = os.path.join(install_dir, 'Proton-' + data['version'])
-        checksum_dir = f'{protondir}/sha512sum'
-        source_checksum = self.rs.get(data['checksum']).text if 'checksum' in data else None
+        data_download: str = data['download']
+        data_checksum: str = data['checksum']
+        data_version: str = data['version']
+
+        # Set GE-Proton basename to "data['version']", set Wine-GE to "lutris-{data['version']}-x86_64"
+        # Assume Wine-GE if release foramt ends in xz
+        #
+        # We can't use launcher name because Proton and Wine-GE may be available for the same launcher 
+        if self.release_format.endswith('xz'):
+            ge_extract_basename = f'lutris-{data_version}-x86_64'
+            ge_extract_fullpath = os.path.join(install_dir, ge_extract_basename)
+        else:
+            ge_extract_basename = data_version
+            ge_extract_fullpath = os.path.join(install_dir, ge_extract_basename)
+
+            print(ge_extract_fullpath)
+
+            # TODO what was this used for? It creates the wrong directory name,
+            #      and we use `get_launcher_extract_dirname` to name the directory properly
+            #      
+            #      Seems to name fine without it at least, unsure about older Proton versions?
+            #
+            # if not os.path.exists(ge_extract_fullpath):
+            #     ge_extract_basename = f'Proton-{data_version}'
+
+        checksum_dir = f'{ge_extract_fullpath}/sha512sum'
+        source_checksum = self.rs.get(data_checksum).text if 'checksum' in data else None
         local_checksum = open(checksum_dir).read() if os.path.exists(checksum_dir) else None
 
-        if os.path.exists(protondir):
+        if os.path.exists(ge_extract_fullpath):
             if local_checksum and source_checksum:
                 if local_checksum in source_checksum:
                     return False
             else:
                 return False
 
-        proton_tar = os.path.join(temp_dir, data['download'].split('/')[-1])
-        if not self.__download(url=data['download'], destination=proton_tar):
+        proton_tar = os.path.join(temp_dir, data_download.split('/')[-1])
+        if not self.__download(url=data_download, destination=proton_tar):
             return False
 
         download_checksum = self.__sha512sum(proton_tar)
         if source_checksum and (download_checksum not in source_checksum):
             return False
 
-        if not extract_tar(proton_tar, install_dir, mode='gz'):
+        tarmode: str = self.release_format.split('.')[-1]  # i.e. 'gz' from 'tar.gz', and if no match, 'tar' returns 'tar'
+        if not extract_tar(proton_tar, install_dir, mode=tarmode):
             return False
 
         if os.path.exists(checksum_dir):
             open(checksum_dir, 'w').write(download_checksum)
 
+        # Rename directory relevant to Steam (default archive name), Lutris (wine-ge), Heroic (Wine-GE)
+        updated_dirname = os.path.join(install_dir, self.get_launcher_extract_dirname(ge_extract_basename, install_dir))
+        os.rename(ge_extract_fullpath, updated_dirname)
+
         self.__set_download_progress_percent(100)
 
         return True
+
+    def get_launcher_extract_dirname(self, original_name: str, install_dir: str) -> str:
+        """
+        Return base extract directory name updated to match naming scheme expected for given launcher.
+        Example: 'lutris-GE-Proton8-17-x86_64' -> 'wine-ge-8-17-x86_64'
+
+        Return Type: str
+        """
+
+        launcher_name = ''
+        launcher = get_launcher_from_installdir(install_dir)
+        if launcher == Launcher.LUTRIS:
+            # Lutris expects this name format for self-updating, see #294 -- ex: wine-ge-8-17-x86_64
+            launcher_name = original_name.lower().replace('lutris', 'wine').replace('proton', '')
+        elif launcher == Launcher.HEROIC:
+            # This matches Heroic Wine-GE naming convention -- ex: Wine-GE-Proton8-17
+            launcher_name = original_name.replace('lutris', 'Wine').rsplit('-', 1)[0]
+
+        return launcher_name or original_name
 
     def get_info_url(self, version):
         """
         Get link with info about version (eg. GitHub release page)
         Return Type: str
         """
+
         return self.CT_INFO_URL + version

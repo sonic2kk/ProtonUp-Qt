@@ -29,7 +29,7 @@ class CtInstaller(QObject):
 
     def __init__(self, main_window = None):
         super(CtInstaller, self).__init__()
-        self.p_download_canceled = False
+        self.p_download_canceled: bool = False
 
         self.release_format = f'tar.gz'
 
@@ -40,7 +40,7 @@ class CtInstaller(QObject):
     def get_download_canceled(self):
         return self.p_download_canceled
 
-    def set_download_canceled(self, val):
+    def set_download_canceled(self, val: bool):
         self.p_download_canceled = val
 
     download_canceled = Property(bool, get_download_canceled, set_download_canceled)
@@ -51,6 +51,7 @@ class CtInstaller(QObject):
         self.p_download_progress_percent = value
         self.download_progress_percent.emit(value)
 
+    # TODO replace with networkutil call
     def __download(self, url: str, destination: str) -> bool:
         """
         Download files from url to destination
@@ -81,18 +82,21 @@ class CtInstaller(QObject):
         self.__set_download_progress_percent(99) # 99 download complete
         return True
 
-    def __sha512sum(self, filename):
+    def __sha512sum(self, filename: str) -> str:
         """
         Get SHA512 checksum of a file
         Return Type: str
         """
+
         sha512sum = hashlib.sha512()
-        with open(filename, 'rb') as file:
+        with open(filename, 'rb') as checksum_file:
             while True:
-                data = file.read(self.BUFFER_SIZE)
+                data = checksum_file.read(self.BUFFER_SIZE)
                 if not data:
                     break
+
                 sha512sum.update(data)
+
         return sha512sum.hexdigest()
 
     def __fetch_github_data(self, tag: str) -> dict[str, str]:
@@ -177,7 +181,8 @@ class CtInstaller(QObject):
             return False
 
         if os.path.exists(checksum_dir):
-            open(checksum_dir, 'w').write(download_checksum)
+            with open(checksum_dir, 'w') as checksum_file:
+                _ = checksum_file.write(download_checksum)
 
         # Rename directory relevant to Steam (default archive name), Lutris (wine-ge), Heroic (Wine-GE)
         updated_dirname = os.path.join(install_dir, self.get_launcher_extract_dirname(ge_extract_basename, install_dir))
@@ -232,10 +237,10 @@ class CtInstaller(QObject):
 
         return launcher_name or original_name
 
-    def get_info_url(self, version):
+    def get_info_url(self, version: str) -> str:
         """
         Get link with info about version (eg. GitHub release page)
         Return Type: str
         """
 
-        return self.CT_INFO_URL + version
+        return f'self.CT_INFO_URL/{version}'

@@ -51,7 +51,7 @@ class CtInstaller(QObject):
         self.p_download_progress_percent = value
         self.download_progress_percent.emit(value)
 
-    def __download(self, url, destination):
+    def __download(self, url: str, destination: str) -> bool:
         """
         Download files from url to destination
         Return Type: bool
@@ -112,7 +112,7 @@ class CtInstaller(QObject):
         for asset in data['assets']:
             if asset['name'].endswith('sha512sum'):
                 values['checksum'] = asset['browser_download_url']
-            elif asset['name'].endswith('tar.gz'):
+            elif asset['name'].endswith(self.release_format):
                 values['download'] = asset['browser_download_url']
                 values['size'] = asset['size']
         return values
@@ -131,39 +131,41 @@ class CtInstaller(QObject):
         """
         return [release['tag_name'] for release in ghapi_rlcheck(self.rs.get(f'{self.CT_URL}?per_page={count}&page={page}').json()) if 'tag_name' in release]
 
-    def get_tool(self, version, install_dir, temp_dir):
+    def get_tool(self, version: str, install_dir: str, temp_dir: str) -> bool:
         """
         Download and install the compatibility tool
         Return Type: bool
         """
 
-        data = self.__fetch_github_data(version)
+        data: dict[str, str] = self.__fetch_github_data(version)
         if not data or 'download' not in data:
             return False
 
         data_download: str = data['download']
-        data_version: str = data['version']
+        proton_tar = os.path.join(temp_dir, data_download.split('/')[-1])
+        if not self.__download(url=data_download, destination=proton_tar):
+            return False
 
-        # Set GE-Proton basename to "data['version']", set Wine-GE to "lutris-{data['version']}-x86_64"
-        # Assume Wine-GE if release foramt ends in xz
-        #
-        # We can't use launcher name because Proton and Wine-GE may be available for the same launcher 
-        if self.release_format.endswith('xz'):
-            ge_extract_basename = f'lutris-{data_version}-x86_64'
-            ge_extract_fullpath = os.path.join(install_dir, ge_extract_basename)
-        else:
-            ge_extract_basename = data_version
+        if not self.__extract(data, install_dir, temp_dir, proton_tar):
+            return False
 
-            # If version tag doesn't start with 'GE-' it's probably an older GE-Proton release
-            # The old Proton-GE naming scheme versions were only tagged with X.Y-GE-Z
-            #
-            # Converts 5.6-GE-2 -> Proton-5.6-GE-2, matching archive extract,
-            # and leaves GE-Proton alone, where archive name and tag name match
-            if not ge_extract_basename.lower().startswith('ge-'):
-                ge_extract_basename = f'Proton-{data_version}'
+        self.__set_download_progress_percent(100)
+        return True
 
-            ge_extract_fullpath = os.path.join(install_dir, ge_extract_basename)
+    def __extract(self, data: dict[str, str], install_dir: str, temp_dir: str, proton_tar: str) -> bool:
+        """
+        Extract tool into given directory and rename the extract directory if required
+        to match launcher expectations.
 
+        Returns `True` if tool could be extracted sucessfully, `False` otherwise.
+
+        Return Type: bool
+        """
+
+        data_version = data['version']
+        ge_extract_fullpath, ge_extract_basename = self.__get_extract_paths(install_dir, data_version)
+
+        # NOTE: Checksum stuff should go in separate method
         checksum_dir = f'{ge_extract_fullpath}/sha512sum'
         source_checksum = self.rs.get(data['checksum']).text if 'checksum' in data else None
         local_checksum = open(checksum_dir).read() if os.path.exists(checksum_dir) else None
@@ -175,10 +177,6 @@ class CtInstaller(QObject):
                     return False
             else:
                 return False
-
-        proton_tar = os.path.join(temp_dir, data_download.split('/')[-1])
-        if not self.__download(url=data_download, destination=proton_tar):
-            return False
 
         download_checksum = self.__sha512sum(proton_tar)
         if source_checksum and (download_checksum not in source_checksum):
@@ -192,13 +190,39 @@ class CtInstaller(QObject):
             open(checksum_dir, 'w').write(download_checksum)
 
         # Rename directory relevant to Steam (default archive name), Lutris (wine-ge), Heroic (Wine-GE)
-        # TODO does this cause errors with older GE-Proton releases?
         updated_dirname = os.path.join(install_dir, self.get_launcher_extract_dirname(ge_extract_basename, install_dir))
         os.rename(ge_extract_fullpath, updated_dirname)
 
-        self.__set_download_progress_percent(100)
-
         return True
+
+    def __get_extract_paths(self, extract_dir: str, tool_version: str) -> tuple[str, str]:
+        """
+        Get the extract directory path with and without the extract filename
+
+        Return Type: tuple[str, str]
+        """
+
+        # Set GE-Proton basename to "data['version']", set Wine-GE to "lutris-{data['version']}-x86_64"
+        # Assume Wine-GE if release foramt ends in xz
+        #
+        # We can't use launcher name because Proton and Wine-GE may be available for the same launcher
+        if self.release_format.endswith('xz'):  # Wine-GE
+            extract_basename = f'lutris-{tool_version}-x86_64'
+            extract_fullpath = os.path.join(extract_dir, extract_basename)
+        else:  # GE-Proton
+            extract_basename = tool_version
+
+            # If version tag doesn't start with 'GE-' it's probably an older GE-Proton release
+            # The old Proton-GE naming scheme versions were only tagged with X.Y-GE-Z
+            #
+            # Converts 5.6-GE-2 -> Proton-5.6-GE-2, matching archive extract,
+            # and leaves GE-Proton alone, where archive name and tag name match
+            if not extract_basename.lower().startswith('ge-'):
+                extract_basename = f'Proton-{tool_version}'
+
+            extract_fullpath = os.path.join(extract_dir, extract_basename)
+
+        return extract_fullpath, extract_basename
 
     def get_launcher_extract_dirname(self, original_name: str, install_dir: str) -> str:
         """

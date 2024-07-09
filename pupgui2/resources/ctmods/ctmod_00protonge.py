@@ -153,6 +153,15 @@ class CtInstaller(QObject):
             ge_extract_fullpath = os.path.join(install_dir, ge_extract_basename)
         else:
             ge_extract_basename = data_version
+
+            # If version tag doesn't start with 'GE-' it's probably an older GE-Proton release
+            # The old Proton-GE naming scheme versions were only tagged with X.Y-GE-Z
+            #
+            # Converts 5.6-GE-2 -> Proton-5.6-GE-2, matching archive extract,
+            # and leaves GE-Proton alone, where archive name and tag name match
+            if not ge_extract_basename.lower().startswith('ge-'):
+                ge_extract_basename = f'Proton-{data_version}'
+
             ge_extract_fullpath = os.path.join(install_dir, ge_extract_basename)
 
         checksum_dir = f'{ge_extract_fullpath}/sha512sum'

@@ -631,13 +631,13 @@ def get_download_url_from_asset(release_url: str, asset: dict, release_format: s
 
 
 # TODO in future if this is re-used for other ctmods other than DXVK and dxvk-async, try to parse more data i.e. checksum
-def fetch_project_release_data(release_url: str, release_format: str, rs: requests.Session, tag: str = '', asset_condition: Optional[Callable] = None) -> dict:
+def fetch_project_release_data(release_url: str, release_format: str, rs: requests.Session, tag: str = '', asset_condition: Callable[..., bool] | None = None) -> dict[str, str]:
 
     """
     Fetch information about a given release based on its tag, with an optional condition lambda.
     Return Type: dict
     Content(s):
-        'version', 'date', 'download', 'size' (if available)
+        'version', 'date', 'download', 'size' (if available), 'checksum'
     """
 
     date_key: str = ''
@@ -653,13 +653,17 @@ def fetch_project_release_data(release_url: str, release_format: str, rs: reques
     else:
         return {}  # Unknown API, cannot fetch data!
 
-    release: dict = rs.get(url).json()
-    values: dict = { 'version': release['tag_name'], 'date': release[date_key].split('T')[0] }
+    release: dict[str, Any] = rs.get(url).json()
+    values: dict[str, str] = { 'version': release['tag_name'], 'date': release[date_key].split('T')[0] }
 
     for asset in get_assets_from_release(release_url, release):
         if asset_url := get_download_url_from_asset(release_url, asset, release_format, asset_condition=asset_condition):
             values['download'] = asset_url
-            values['size'] = asset.get('size', None)
+            values['size'] = asset.get('size', '')
+
+            # NOTE: In future we may have to add more checksum types
+            if asset['name'].endswith('sha512sum'):
+                values['checksum'] = asset_url
 
             break
 

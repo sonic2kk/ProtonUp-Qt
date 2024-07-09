@@ -9,7 +9,7 @@ import hashlib
 from PySide6.QtCore import QObject, QCoreApplication, Signal, Property
 
 from pupgui2.datastructures import Launcher
-from pupgui2.util import get_launcher_from_installdir, ghapi_rlcheck, extract_tar
+from pupgui2.util import fetch_project_release_data, fetch_project_releases, get_launcher_from_installdir, ghapi_rlcheck, extract_tar
 from pupgui2.util import build_headers_with_authorization
 
 
@@ -95,27 +95,15 @@ class CtInstaller(QObject):
                 sha512sum.update(data)
         return sha512sum.hexdigest()
 
-    # TODO replace with network function
-    def __fetch_github_data(self, tag):
+    def __fetch_github_data(self, tag: str) -> dict[str, str]:
         """
         Fetch GitHub release information
         Return Type: dict
         Content(s):
             'version', 'date', 'download', 'size', 'checksum'
         """
-        url = self.CT_URL + (f'/tags/{tag}' if tag else '/latest')
-        data = self.rs.get(url).json()
-        if 'tag_name' not in data:
-            return None
 
-        values = {'version': data['tag_name'], 'date': data['published_at'].split('T')[0]}
-        for asset in data['assets']:
-            if asset['name'].endswith('sha512sum'):
-                values['checksum'] = asset['browser_download_url']
-            elif asset['name'].endswith(self.release_format):
-                values['download'] = asset['browser_download_url']
-                values['size'] = asset['size']
-        return values
+        return fetch_project_release_data(self.CT_URL, self.release_format, self.rs, tag=tag)
 
     def is_system_compatible(self):
         """
@@ -124,12 +112,14 @@ class CtInstaller(QObject):
         """
         return True
 
-    def fetch_releases(self, count=100, page=1):
+    def fetch_releases(self, count: int = 100, page: int = 1) -> list[str]:
         """
-        List available releases
-        Return Type: str[]
+        List available release names
+
+        Return Type: list[str]
         """
-        return [release['tag_name'] for release in ghapi_rlcheck(self.rs.get(f'{self.CT_URL}?per_page={count}&page={page}').json()) if 'tag_name' in release]
+
+        return fetch_project_releases(self.CT_URL, self.rs, count=count, page=page)
 
     def get_tool(self, version: str, install_dir: str, temp_dir: str) -> bool:
         """
@@ -215,8 +205,7 @@ class CtInstaller(QObject):
             # If version tag doesn't start with 'GE-' it's probably an older GE-Proton release
             # The old Proton-GE naming scheme versions were only tagged with X.Y-GE-Z
             #
-            # Converts 5.6-GE-2 -> Proton-5.6-GE-2, matching archive extract,
-            # and leaves GE-Proton alone, where archive name and tag name match
+            # Converts 5.6-GE-2 -> Proton-5.6-GE-2, matching archive extract, and leaves GE-Proton alone, where archive name and tag name match
             if not extract_basename.lower().startswith('ge-'):
                 extract_basename = f'Proton-{tool_version}'
 

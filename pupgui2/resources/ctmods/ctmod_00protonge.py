@@ -112,7 +112,7 @@ class CtInstaller(QObject):
         for asset in data['assets']:
             if asset['name'].endswith('sha512sum'):
                 values['checksum'] = asset['browser_download_url']
-            elif asset['name'].endswith(self.release_format):
+            elif asset['name'].endswith('tar.gz'):
                 values['download'] = asset['browser_download_url']
                 values['size'] = asset['size']
         return values
@@ -131,19 +131,17 @@ class CtInstaller(QObject):
         """
         return [release['tag_name'] for release in ghapi_rlcheck(self.rs.get(f'{self.CT_URL}?per_page={count}&page={page}').json()) if 'tag_name' in release]
 
-    # TODO test very old Proton versions (i.e old naming scheme, like Proton-GE-5.4)
     def get_tool(self, version, install_dir, temp_dir):
         """
         Download and install the compatibility tool
         Return Type: bool
         """
-        data = self.__fetch_github_data(version)
 
+        data = self.__fetch_github_data(version)
         if not data or 'download' not in data:
             return False
 
         data_download: str = data['download']
-        data_checksum: str = data['checksum']
         data_version: str = data['version']
 
         # Set GE-Proton basename to "data['version']", set Wine-GE to "lutris-{data['version']}-x86_64"
@@ -157,20 +155,11 @@ class CtInstaller(QObject):
             ge_extract_basename = data_version
             ge_extract_fullpath = os.path.join(install_dir, ge_extract_basename)
 
-            print(ge_extract_fullpath)
-
-            # TODO what was this used for? It creates the wrong directory name,
-            #      and we use `get_launcher_extract_dirname` to name the directory properly
-            #      
-            #      Seems to name fine without it at least, unsure about older Proton versions?
-            #
-            # if not os.path.exists(ge_extract_fullpath):
-            #     ge_extract_basename = f'Proton-{data_version}'
-
         checksum_dir = f'{ge_extract_fullpath}/sha512sum'
-        source_checksum = self.rs.get(data_checksum).text if 'checksum' in data else None
+        source_checksum = self.rs.get(data['checksum']).text if 'checksum' in data else None
         local_checksum = open(checksum_dir).read() if os.path.exists(checksum_dir) else None
 
+        # Older GE-Proton releases don't have checksums (i.e. Proton-5.6-GE-2)
         if os.path.exists(ge_extract_fullpath):
             if local_checksum and source_checksum:
                 if local_checksum in source_checksum:
@@ -194,6 +183,7 @@ class CtInstaller(QObject):
             open(checksum_dir, 'w').write(download_checksum)
 
         # Rename directory relevant to Steam (default archive name), Lutris (wine-ge), Heroic (Wine-GE)
+        # TODO does this cause errors with older GE-Proton releases?
         updated_dirname = os.path.join(install_dir, self.get_launcher_extract_dirname(ge_extract_basename, install_dir))
         os.rename(ge_extract_fullpath, updated_dirname)
 

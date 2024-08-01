@@ -24,7 +24,7 @@ from pupgui2.constants import AWACY_GAME_LIST_URL, LOCAL_AWACY_GAME_LIST
 from pupgui2.constants import GITHUB_API, GITLAB_API, GITLAB_API_RATELIMIT_TEXT
 from pupgui2.datastructures import BasicCompatTool, CTType, Launcher, SteamApp, LutrisGame, HeroicGame
 from pupgui2.steamutil import remove_steamtinkerlaunch, is_valid_steam_install
-from pupgui2.types import AnyGame
+from pupgui2.types import JSON, AnyGame
 
 
 def create_msgbox(
@@ -521,30 +521,33 @@ def host_path_exists(path: str, is_file: bool) -> bool:
     return bool(ret) 
 
 
-def ghapi_rlcheck(json: dict):
+def ghapi_rlcheck(json: JSON) -> JSON:
     """ Checks if the given GitHub request response (JSON) contains a rate limit warning and warns the user """
-    if type(json) == dict:
-        if 'API rate limit exceeded' in json.get('message', ''):
+    if type(json) is dict:
+        message = str(json.get('message', ''))
+        if 'API rate limit exceeded' in message:
             print('Warning: GitHub API rate limit exceeded. See https://github.com/DavidoTek/ProtonUp-Qt/issues/161#issuecomment-1358200080 for details.')
             QApplication.instance().message_box_message.emit(
                 QCoreApplication.instance().translate('util.py', 'Warning: GitHub API rate limit exceeded!'),
                 QCoreApplication.instance().translate('util.py', 'GitHub API rate limit exceeded. You may need to wait a while or specify a GitHub API key if you have one.\n\nSee https://github.com/DavidoTek/ProtonUp-Qt/issues/161#issuecomment-1358200080 for details.'),
-                QMessageBox.Warning
-                )
+                QMessageBox.Icon.Warning
+            )
+
     return json
 
 
-def glapi_rlcheck(json: dict):
-    if type(json) == dict:
+def glapi_rlcheck(json: JSON) -> JSON:
+    if type(json) is dict:
         # Is 'message' the right key? GitLab should return it as plaintext
         # See: https://docs.gitlab.com/ee/administration/settings/user_and_ip_rate_limits.html#use-a-custom-rate-limit-response
-        if any(rate_limit_msg in json.get('message', '') for rate_limit_msg in GITLAB_API_RATELIMIT_TEXT):
+        if any(rate_limit_msg in str(json.get('message', '')) for rate_limit_msg in GITLAB_API_RATELIMIT_TEXT):
             print('Warning: GitLab API rate limit exceeded. You may need to wait a while or specify a GitLab API token generated for the given instance.')
             QApplication.instance().message_box_message.emit(
                 QCoreApplication.instance().translate('util.py', 'Warning: GitLab API rate limit exceeded!'),
                 QCoreApplication.instance().translate('util.py', 'GitLab API rate limite exceeded. You may want to wait a while or specify a GitLab API key generated for this GitLab instance if you have one.'),
-                QMessageBox.Warning
+                QMessageBox.Icon.Warning
             )
+
     return json
 
 

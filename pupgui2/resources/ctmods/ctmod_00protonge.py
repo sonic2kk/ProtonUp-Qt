@@ -25,10 +25,10 @@ class CtInstaller(QObject):
     BUFFER_SIZE = 65536
     CT_URL = 'https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases'
     CT_INFO_URL = 'https://github.com/GloriousEggroll/proton-ge-custom/releases/tag/'
-    message_box_message = Signal((str, str, QMessageBox.Icon))
 
     p_download_progress_percent = 0
     download_progress_percent = Signal(int)
+    message_box_message = Signal((str, str, QMessageBox.Icon))
 
     def __init__(self, main_window = None):
         super(CtInstaller, self).__init__()
@@ -54,7 +54,7 @@ class CtInstaller(QObject):
         self.p_download_progress_percent = value
         self.download_progress_percent.emit(value)
 
-    def __download(self, url: str, destination: str, known_size: int = 0):
+    def __download(self, url: str, destination: str, known_size: int = 0) -> bool | None:
         """
         Download files from url to destination
         Return Type: bool
@@ -106,11 +106,12 @@ class CtInstaller(QObject):
 
         return fetch_project_release_data(self.CT_URL, self.release_format, self.rs, tag=tag)
 
-    def is_system_compatible(self):
+    def is_system_compatible(self) -> bool:
         """
         Are the system requirements met?
         Return Type: bool
         """
+
         return True
 
     def fetch_releases(self, count: int = 100, page: int = 1) -> list[str]:

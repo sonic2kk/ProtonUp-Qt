@@ -11,7 +11,7 @@ from PySide6.QtCore import QObject, QCoreApplication, Signal, Property
 
 from pupgui2.datastructures import Launcher
 from pupgui2.networkutil import download_file
-from pupgui2.util import fetch_project_release_data, fetch_project_releases, get_launcher_from_installdir, ghapi_rlcheck, extract_tar
+from pupgui2.util import fetch_project_release_data, fetch_project_releases, get_launcher_from_installdir, ghapi_rlcheck, extract_tar, remove_if_exists
 from pupgui2.util import build_headers_with_authorization
 
 
@@ -184,7 +184,12 @@ class CtInstaller(QObject):
 
         # Rename directory relevant to Steam (default archive name), Lutris (wine-ge), Heroic (Wine-GE)
         updated_dirname = os.path.join(install_dir, self.__get_launcher_extract_dirname(ge_extract_basename, install_dir))
-        os.rename(ge_extract_fullpath, updated_dirname)
+
+        # Only rename if the paths are different
+        if not updated_dirname == ge_extract_fullpath:
+            # If a folder already exists with the rename we want, remove it
+            remove_if_exists(updated_dirname)
+            os.rename(ge_extract_fullpath, updated_dirname)
 
         return True
 
@@ -224,7 +229,8 @@ class CtInstaller(QObject):
         Return Type: str
         """
 
-        launcher_name = ''
+        launcher_name = original_name
+
         launcher = get_launcher_from_installdir(install_dir)
         if launcher == Launcher.LUTRIS:
             # Lutris expects this name format for self-updating, see #294 -- ex: wine-ge-8-17-x86_64
@@ -233,7 +239,7 @@ class CtInstaller(QObject):
             # This matches Heroic Wine-GE naming convention -- ex: Wine-GE-Proton8-17
             launcher_name = original_name.replace('lutris', 'Wine').rsplit('-', 1)[0]
 
-        return launcher_name or original_name
+        return launcher_name
 
     def get_info_url(self, version: str) -> str:
         """

@@ -154,7 +154,7 @@ class CtInstaller(QObject):
         Return Type: bool
         """
 
-        data_version = data['version']
+        data_version: str = data['version']
         ge_extract_fullpath, ge_extract_basename = self.__get_extract_paths(install_dir, data_version)
 
         # NOTE: Checksum stuff should go in separate method
@@ -183,7 +183,7 @@ class CtInstaller(QObject):
                 _ = checksum_file.write(download_checksum)
 
         # Rename directory relevant to Steam (default archive name), Lutris (wine-ge), Heroic (Wine-GE)
-        updated_dirname = os.path.join(install_dir, self.get_launcher_extract_dirname(ge_extract_basename, install_dir))
+        updated_dirname = os.path.join(install_dir, self.__get_launcher_extract_dirname(ge_extract_basename, install_dir))
         os.rename(ge_extract_fullpath, updated_dirname)
 
         return True
@@ -216,7 +216,7 @@ class CtInstaller(QObject):
 
         return extract_fullpath, extract_basename
 
-    def get_launcher_extract_dirname(self, original_name: str, install_dir: str) -> str:
+    def __get_launcher_extract_dirname(self, original_name: str, install_dir: str) -> str:
         """
         Return base extract directory name updated to match naming scheme expected for given launcher.
         Example: 'lutris-GE-Proton8-17-x86_64' -> 'wine-ge-8-17-x86_64'

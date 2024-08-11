@@ -3,12 +3,14 @@
 # Copyright (C) 2021 DavidoTek, partially based on AUNaseef's protonup
 
 import os
+from PySide6.QtWidgets import QMessageBox
 import requests
 import hashlib
 
 from PySide6.QtCore import QObject, QCoreApplication, Signal, Property
 
 from pupgui2.datastructures import Launcher
+from pupgui2.networkutil import download_file
 from pupgui2.util import fetch_project_release_data, fetch_project_releases, get_launcher_from_installdir, ghapi_rlcheck, extract_tar
 from pupgui2.util import build_headers_with_authorization
 
@@ -23,6 +25,7 @@ class CtInstaller(QObject):
     BUFFER_SIZE = 65536
     CT_URL = 'https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases'
     CT_INFO_URL = 'https://github.com/GloriousEggroll/proton-ge-custom/releases/tag/'
+    message_box_message = Signal((str, str, QMessageBox.Icon))
 
     p_download_progress_percent = 0
     download_progress_percent = Signal(int)
@@ -51,36 +54,30 @@ class CtInstaller(QObject):
         self.p_download_progress_percent = value
         self.download_progress_percent.emit(value)
 
-    # TODO replace with networkutil call
-    def __download(self, url: str, destination: str) -> bool:
+    def __download(self, url: str, destination: str, known_size: int = 0):
         """
         Download files from url to destination
         Return Type: bool
         """
-        try:
-            file = self.rs.get(url, stream=True)
-        except OSError:
-            return False
 
-        self.__set_download_progress_percent(1) # 1 download started
-        f_size = int(file.headers.get('content-length'))
-        c_count = int(f_size / self.BUFFER_SIZE)
-        c_current = 1
-        destination = os.path.expanduser(destination)
-        os.makedirs(os.path.dirname(destination), exist_ok=True)
-        with open(destination, 'wb') as dest:
-            for chunk in file.iter_content(chunk_size=self.BUFFER_SIZE):
-                if self.download_canceled:
-                    self.download_canceled = False
-                    self.__set_download_progress_percent(-2) # -2 download canceled
-                    return False
-                if chunk:
-                    dest.write(chunk)
-                    dest.flush()
-                self.__set_download_progress_percent(int(min(c_current / c_count * 98.0, 98.0))) # 1-98, 100 after extract
-                c_current += 1
-        self.__set_download_progress_percent(99) # 99 download complete
-        return True
+        try:
+            return download_file(
+                url=url,
+                destination=destination,
+                progress_callback=self.__set_download_progress_percent,
+                download_cancelled=self.download_canceled,
+                buffer_size=self.BUFFER_SIZE,
+                stream=True,
+                known_size=known_size
+            )
+        except Exception as e:
+            print(f"Failed to download tool {CT_NAME} - Reason: {e}")
+
+            self.message_box_message.emit(
+                self.tr("Download Error!"),
+                self.tr("Failed to download tool '{CT_NAME}'!\n\nReason: {EXCEPTION}".format(CT_NAME=CT_NAME, EXCEPTION=e)),
+                QMessageBox.Icon.Warning
+            )
 
     def __sha512sum(self, filename: str) -> str:
         """

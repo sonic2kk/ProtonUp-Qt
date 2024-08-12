@@ -637,7 +637,7 @@ def fetch_project_release_data(release_url: str, release_format: str, rs: reques
     Fetch information about a given release based on its tag, with an optional condition lambda.
     Return Type: dict
     Content(s):
-        'version', 'date', 'download', 'size' (if available), 'checksum'
+        'version', 'date', 'download', 'size' (if available), 'checksum' (if available)
     """
 
     date_key: str = ''
@@ -661,11 +661,10 @@ def fetch_project_release_data(release_url: str, release_format: str, rs: reques
             values['download'] = asset_url
             values['size'] = asset.get('size', '')
 
-            # NOTE: In future we may have to add more checksum types
-            if asset['name'].endswith('sha512sum'):
-                values['checksum'] = asset_url
-
-            break
+        # NOTE: In future we may have to add more checksum types
+        # TODO we need to verify that the checksum matches the asset we want, because a release could have a checksum for each asset
+        if checksum_url := get_download_url_from_asset(release_url, asset, 'sha512sum'):
+            values['checksum'] = checksum_url
 
     return values
 

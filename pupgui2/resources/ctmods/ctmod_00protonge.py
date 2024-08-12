@@ -164,6 +164,8 @@ class CtInstaller(QObject):
 
         # Older GE-Proton releases don't have checksums (i.e. Proton-5.6-GE-2)
         if os.path.exists(ge_extract_fullpath):
+            print(f'{local_checksum=}')
+            print(f'{source_checksum=}')
             if local_checksum and source_checksum:
                 if local_checksum in source_checksum:
                     return False

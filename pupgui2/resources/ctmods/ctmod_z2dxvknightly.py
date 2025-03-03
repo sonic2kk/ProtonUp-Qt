@@ -2,13 +2,12 @@
 # DXVK for Lutris (nightly version): https://github.com/doitsujin/dxvk/
 # Copyright (C) 2022 DavidoTek, partially based on AUNaseef's protonup
 
-import os
-import requests
+from typing import override
+from PySide6.QtCore import QCoreApplication
 
-from PySide6.QtCore import QObject, QCoreApplication, Signal, Property
+from pupgui2.util import ghapi_rlcheck
 
-from pupgui2.util import ghapi_rlcheck, extract_zip
-from pupgui2.util import build_headers_with_authorization
+from pupgui2.resources.ctmods.ctmod_z0dxvk import CtInstaller as DXVKInstaller
 
 
 CT_NAME = 'DXVK (nightly)'
@@ -16,68 +15,19 @@ CT_LAUNCHERS = ['lutris', 'advmode']
 CT_DESCRIPTION = {'en': QCoreApplication.instance().translate('ctmod_z2dxvknightly', '''Nightly version of DXVK (master branch), a Vulkan based implementation of Direct3D 8, 9, 10 and 11 for Linux/Wine.<br/><br/><b>Warning: Nightly version is unstable, use with caution!</b>''')}
 
 
-class CtInstaller(QObject):
+class CtInstaller(DXVKInstaller):
 
     BUFFER_SIZE = 65536
     CT_URL = 'https://api.github.com/repos/doitsujin/dxvk/actions/artifacts'
     CT_INFO_URL = 'https://github.com/doitsujin/dxvk/commit/'
 
-    p_download_progress_percent = 0
-    download_progress_percent = Signal(int)
-
     def __init__(self, main_window = None):
-        super(CtInstaller, self).__init__()
-        self.p_download_canceled = False
 
-        self.rs = requests.Session()
-        rs_headers = build_headers_with_authorization({}, main_window.web_access_tokens, 'github')
-        self.rs.headers.update(rs_headers)
+        super().__init__(main_window)
 
-    def get_download_canceled(self):
-        return self.p_download_canceled
+        self.release_format = 'zip'
 
-    def set_download_canceled(self, val):
-        self.p_download_canceled = val
-
-    download_canceled = Property(bool, get_download_canceled, set_download_canceled)
-
-    def __set_download_progress_percent(self, value : int):
-        if self.p_download_progress_percent == value:
-            return
-        self.p_download_progress_percent = value
-        self.download_progress_percent.emit(value)
-
-    def __download(self, url, destination, f_size):
-        # f_size in argumentbecause artifacts don't have Content-Length.
-        """
-        Download files from url to destination
-        Return Type: bool
-        """
-        try:
-            file = requests.get(url, stream=True)
-        except OSError:
-            return False
-
-        self.__set_download_progress_percent(1) # 1 download started
-        c_count = int(f_size / self.BUFFER_SIZE)
-        c_current = 1
-        destination = os.path.expanduser(destination)
-        os.makedirs(os.path.dirname(destination), exist_ok=True)
-        with open(destination, 'wb') as dest:
-            for chunk in file.iter_content(chunk_size=self.BUFFER_SIZE):
-                if self.download_canceled:
-                    self.download_canceled = False
-                    self.__set_download_progress_percent(-2) # -2 download canceled
-                    return False
-                if chunk:
-                    dest.write(chunk)
-                    dest.flush()
-                self.__set_download_progress_percent(int(min(c_current / c_count * 98.0, 98.0))) # 1-98, 100 after extract
-                c_current += 1
-        self.__set_download_progress_percent(99) # 99 download complete
-        return True
-
-    def __get_artifact_from_commit(self, commit):
+    def __get_artifact_from_commit(self, commit: str) -> str | None:
         """
         Get artifact from commit
         Return Type: str
@@ -88,7 +38,7 @@ class CtInstaller(QObject):
                 return artifact
         return None
 
-    def __fetch_github_data(self, tag):
+    def __fetch_data(self, tag):
         """
         Fetch GitHub release information
         Return Type: dict
@@ -105,14 +55,7 @@ class CtInstaller(QObject):
         values['size'] = data['size_in_bytes']
         return values
 
-    def is_system_compatible(self):
-        """
-        Are the system requirements met?
-        Return Type: bool
-        """
-        return True
-
-    def fetch_releases(self, count=100, page=1):
+    def fetch_releases(self, count: int = 100, page: int = 1) -> list:
         """
         List available releases
         Return Type: str[]
@@ -124,31 +67,3 @@ class CtInstaller(QObject):
                 continue
             tags.append(workflow['head_sha'][:7])
         return tags
-
-    def get_tool(self, version, install_dir, temp_dir):
-        """
-    Download and install the compatibility tool
-        Return Type: bool
-        """
-        data = self.__fetch_github_data(version)
-        if not data or 'download' not in data:
-            return False
-
-        dxvk_zip = os.path.join(temp_dir, data['download'].split('/')[-1])
-        if not self.__download(url=data['download'], destination=dxvk_zip, f_size=data['size']):
-            return False
-
-        dxvk_dir = os.path.join(install_dir, '../../runtime/dxvk', 'dxvk-git-' + data['version'])
-        if not extract_zip(dxvk_zip, dxvk_dir):
-            return False
-
-        self.__set_download_progress_percent(100)
-
-        return True
-
-    def get_info_url(self, version):
-        """
-        Get link with info about version (eg. GitHub release page)
-        Return Type: str
-        """
-        return self.CT_INFO_URL + version

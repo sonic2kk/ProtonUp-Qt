@@ -9,7 +9,7 @@ import requests
 from PySide6.QtCore import QObject, QCoreApplication, Signal, Property
 
 from pupgui2.networkutil import download_file
-from pupgui2.util import extract_tar, get_launcher_from_installdir, fetch_project_releases
+from pupgui2.util import extract_tar, extract_zip, get_launcher_from_installdir, fetch_project_releases
 from pupgui2.util import fetch_project_release_data, build_headers_with_authorization
 from pupgui2.datastructures import Launcher
 
@@ -113,13 +113,18 @@ class CtInstaller(QObject):
             return False
 
         # Should be updated to support Heroic, like ctmod_d8vk
-        dxvk_tar = os.path.join(temp_dir, data['download'].split('/')[-1])
-        if not self.__download(url=data['download'], destination=dxvk_tar, known_size=data.get('size', 0)):
+        dxvk_archive = os.path.join(temp_dir, data['download'].split('/')[-1])
+        if not self.__download(url=data['download'], destination=dxvk_archive, known_size=data.get('size', 0)):
             return False
 
+        # DXVK Nightly will be ZIP; DXVK and DXVK Async will be tarballs
         dxvk_dir = self.get_extract_dir(install_dir)
-        if not extract_tar(dxvk_tar, dxvk_dir, mode='gz'):
-            return False
+        if self.release_format.endswith('zip'):
+            if not extract_zip(dxvk_archive, dxvk_dir):
+                return False
+        else:
+            if not extract_tar(dxvk_archive, dxvk_dir, mode=self.release_format.split('.')[-1]):
+                return False
 
         self.__set_download_progress_percent(100)
 

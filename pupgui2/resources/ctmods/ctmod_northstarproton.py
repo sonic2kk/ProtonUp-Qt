@@ -2,7 +2,8 @@
 # cyrv6737's NorthstarProton for TitanFall 2
 # Copyright (C) 2022 DavidoTek, partially based on AUNaseef's protonup
 
-from PySide6.QtCore import QObject, Signal, Property, QCoreApplication
+from typing import override
+from PySide6.QtCore import QCoreApplication
 
 from pupgui2.util import fetch_project_release_data, fetch_project_releases
 
@@ -26,20 +27,12 @@ class CtInstaller(GEProtonInstaller):
 
         self.release_format: str = 'tar.gz'
 
+    @override
     def fetch_releases(self, count: int = 100, page: int = 1) -> list[str]:
-        """
-        List available releases
-        Return Type: str[]
-        """
 
         return fetch_project_releases(self.CT_URL, self.rs, count=count, page=page)
 
+    @override
     def __fetch_github_data(self, tag: str) -> dict:
-        """
-        Fetch GitHub release information
-        Return Type: dict
-        Content(s):
-            'version', 'date', 'download', 'size'
-        """
 
         return fetch_project_release_data(self.CT_URL, self.release_format, self.rs, tag=tag)

@@ -120,9 +120,13 @@ class CtInstaller(QObject):
         tags = []
         for artifact in ghapi_rlcheck(self.rs.get(f'{self.CT_URL}?per_page={count}&page={page}').json()).get("artifacts", {}):
             workflow = artifact['workflow_run']
-            if workflow["head_branch"] != "master" or artifact["expired"]:
+            workflow_sha = workflow['head_sha'][:7]
+
+            if workflow["head_branch"] != "master" or artifact["expired"] or workflow_sha in tags:
                 continue
-            tags.append(workflow['head_sha'][:7])
+
+            tags.append(workflow_sha)
+
         return tags
 
     def get_tool(self, version, install_dir, temp_dir):

@@ -1,0 +1,710 @@
+[
+    {
+      "url": "",
+      "name": "Halo: The Master Chief Collection",
+      "logo": "",
+      "native": false,
+      "status": "Supported",
+      "reference": "",
+      "anticheats": [
+        "Easy Anti-Cheat"
+      ],
+      "notes": [
+        [
+          "All-modes enabled with minor caveats",
+          "https://www.gamingonlinux.com/2023/04/halo-the-master-chief-collection-gets-steam-deck-support/"
+        ],
+        [
+          "Singleplayer, co-op, and custom matches work",
+          "https://www.protondb.com/app/976730#s1M6yjsTt"
+        ]
+      ],
+      "updates": [
+        {
+          "name": "Tried to enable EAC",
+          "date": "Apr 12, 2022, 8:10 AM GMT+2",
+          "reference": "https://www.xda-developers.com/halo-mcc-broken-steam-deck/"
+        },
+        {
+          "name": "Updated Linux EAC Files",
+          "date": "Aug 31, 2022, 17:00:12 UTC",
+          "reference": "https://steamdb.info/patchnotes/9367265/"
+        },
+        {
+          "name": "Still actively working on it",
+          "date": "Dec 15, 2022, 4:15 PM GMT+1",
+          "reference": "https://www.theverge.com/23499215/valve-steam-deck-interview-late-2022"
+        },
+        {
+          "name": "Steam Deck Support",
+          "date": "Apr 6, 2023, 8:00 PM UTC",
+          "reference": "https://support.halowaypoint.com/hc/en-us/articles/14589112499348"
+        }
+      ],
+      "storeIds": {
+        "steam": "976730"
+      },
+      "slug": "halo-the-master-chief-collection",
+      "dateChanged": "2024-01-19T04:40:56.000Z"
+    },
+    {
+      "url": "https://www.fortnite.com/",
+      "name": "Fortnite",
+      "logo": "",
+      "native": false,
+      "status": "Denied",
+      "reference": "",
+      "anticheats": [
+        "Easy Anti-Cheat"
+      ],
+      "notes": [
+        [
+          "Works on Xbox-Cloud",
+          "https://news.xbox.com/en-us/2022/05/05/play-fortnite-with-xbox-cloud-gaming-for-free/"
+        ]
+      ],
+      "updates": [
+        {
+          "name": "Not confident in anti-cheat",
+          "date": "Feb 07, 2022, 6:59 AM GMT+2",
+          "reference": "https://twitter.com/TimSweeneyEpic/status/1490565925648715781"
+        },
+        {
+          "name": "Removed Hyperion",
+          "date": "Nov 1, 2022, 6:43 PM GMT+1",
+          "reference": "https://github.com/Starz0r/AreWeAntiCheatYet/issues/918"
+        },
+        {
+          "name": "Was running for a short period of time",
+          "date": "Nov 2, 2022, 8:04 AM GMT+1",
+          "reference": "https://github.com/Starz0r/AreWeAntiCheatYet/issues/918#issuecomment-1299673303"
+        },
+        {
+          "name": "Removed BattlEye",
+          "date": "Jun 11, 2024, 5:34 PM GMT+1",
+          "reference": "https://x.com/ShiinaBR/status/1800567329870537171"
+        }
+      ],
+      "storeIds": {
+        "epic": {
+          "namespace": "fn",
+          "slug": "fortnite"
+        }
+      },
+      "slug": "fortnite",
+      "dateChanged": "2024-10-04T17:23:46.000Z"
+    },
+    {
+      "url": "",
+      "name": "Battlefield™ 2042",
+      "logo": "",
+      "native": false,
+      "status": "Denied",
+      "reference": "https://www.protondb.com/app/1517290#atmpx3XrXL",
+      "anticheats": [
+        "EA anticheat"
+      ],
+      "notes": [],
+      "updates": [],
+      "storeIds": {
+        "steam": "1517290",
+        "epic": {
+          "namespace": "52f57f57120c440fad9bfa0e6c279317",
+          "slug": "battlefield-2042"
+        }
+      },
+      "slug": "battlefield-2042",
+      "dateChanged": "2024-11-04T00:18:17.181Z"
+    },
+    {
+      "url": "https://www.ea.com/games/apex-legends",
+      "name": "Apex Legends",
+      "logo": "",
+      "native": false,
+      "status": "Denied",
+      "reference": "",
+      "anticheats": [
+        "Easy Anti-Cheat",
+        "Hyperion"
+      ],
+      "notes": [],
+      "updates": [
+        {
+          "name": "Enabled Linux support shortly after SteamDeck launch",
+          "date": "2022-03-01T18:00:27+00:00",
+          "reference": "https://steamdb.info/patchnotes/8270674/"
+        },
+        {
+          "name": "Linux support disabled",
+          "date": "Oct 31, 2024, 4:07 PM UTC",
+          "reference": "https://x.com/PlayApex/status/1852019667315102151"
+        }
+      ],
+      "storeIds": {
+        "steam": "1172470"
+      },
+      "slug": "apex-legends",
+      "dateChanged": "2024-10-31T18:29:00.000Z"
+    },
+    {
+      "url": "https://playvalorant.com",
+      "name": "Valorant",
+      "logo": "",
+      "native": false,
+      "status": "Denied",
+      "reference": "https://playvalorant.com/en-gb/specs/",
+      "anticheats": [
+        "Vanguard"
+      ],
+      "notes": [],
+      "updates": [
+        {
+          "name": "Vanguard developer claims Linux has \"too much attack surface\".",
+          "date": "Fri, 26 Jan 2024 01:27:06 GMT",
+          "reference": "https://github.com/AreWeAntiCheatYet/AreWeAntiCheatYet/assets/33342705/266b364f-8964-4ae2-9cc4-58e2fd5f9947"
+        }
+      ],
+      "storeIds": {
+        "epic": {
+          "namespace": "cbd5b3d310a54b12bf3fe8c41994174f",
+          "slug": "valorant"
+        }
+      },
+      "slug": "valorant",
+      "dateChanged": "2024-09-02T22:22:14.140Z"
+    },
+    {
+      "url": "https://www.halowaypoint.com/de-de/halo-infinite",
+      "name": "Halo Infinite",
+      "logo": "",
+      "native": false,
+      "status": "Supported",
+      "reference": "https://www.gamingonlinux.com/2024/03/halo-infinite-added-easy-anti-cheat-enabled-for-linux-steam-deck/",
+      "anticheats": [
+        "Arbiter",
+        "Easy Anti-Cheat"
+      ],
+      "notes": [
+        [
+          "Requires Patched Mesa & Proton GE",
+          "https://github.com/ValveSoftware/Proton/issues/5030#issuecomment-1169003294"
+        ]
+      ],
+      "updates": [
+        {
+          "name": "No longer requires workaround",
+          "date": "Dec 18, 2022, 3:18 AM GMT+1",
+          "reference": "https://github.com/Starz0r/AreWeAntiCheatYet/issues/1022"
+        }
+      ],
+      "storeIds": {
+        "steam": "1240440"
+      },
+      "slug": "halo-infinite",
+      "dateChanged": "2024-04-11T19:24:20.671Z"
+    },
+    {
+      "url": "https://www.back4blood.com/",
+      "name": "Back 4 Blood",
+      "logo": "",
+      "native": false,
+      "status": "Supported",
+      "reference": "",
+      "anticheats": [
+        "Easy Anti-Cheat"
+      ],
+      "notes": [],
+      "updates": [
+        {
+          "name": "Back 4 Blood on Steam Deck, Linux PCs with WINE/Proton",
+          "date": "Apr 12, 2022, 0:00 AM",
+          "reference": "https://back4blood.com/en-us/patch-notes/april-2022-update"
+        }
+      ],
+      "storeIds": {
+        "steam": "924970",
+        "epic": {
+          "namespace": "57dfd95548214a138218e56cd9e5b9d8",
+          "slug": "back-4-blood"
+        }
+      },
+      "slug": "back-4-blood",
+      "dateChanged": "2024-01-19T04:40:56.000Z"
+    },
+    {
+      "url": "",
+      "name": "Paladins",
+      "logo": "",
+      "native": false,
+      "status": "Running",
+      "reference": "",
+      "anticheats": [
+        "Easy Anti-Cheat"
+      ],
+      "notes": [
+        [
+          "Make sure to check recent updates, the game is known to break often (And the status may not update to reflect that)",
+          ""
+        ]
+      ],
+      "updates": [
+        {
+          "name": "Hope to provide such support in the near future",
+          "date": "Nov 09, 2021, 5:55 PM EST",
+          "reference": "https://www.theverge.com/2021/10/5/22709918/valve-steam-deck-supported-games-anti-cheat-proton-eac-battleye-epic"
+        },
+        {
+          "name": "Running with Proton GE, Anti-Cheat may not be intentionally enabled",
+          "date": "Sat May 14 2022 23:57:51 GMT+0000",
+          "reference": "https://www.protondb.com/app/444090#7U2uy5DZzc"
+        },
+        {
+          "name": "Proton Experimental - Now Playable: Paladins",
+          "date": "Thu Jun 30 2022 16:00:00 GMT+0000",
+          "reference": "https://github.com/ValveSoftware/Proton/wiki/Changelog"
+        },
+        {
+          "name": "Reports of game not working",
+          "date": "Jul 13, 2022, 2:29 AM GMT+2",
+          "reference": "https://github.com/Starz0r/AreWeAntiCheatYet/issues/581"
+        },
+        {
+          "name": "Previously working most likely due to fluke in EAC Config",
+          "date": "Aug 05, 2022, 9:57 PM",
+          "reference": "https://github.com/ValveSoftware/Proton/issues/6062#issuecomment-1206809079"
+        },
+        {
+          "name": "No plans to dedicate time for steam deck / linux compatibility",
+          "date": "Feb 14, 2023, 02:13 AM",
+          "reference": "https://www.reddit.com/r/paladinsgame/comments/110mcuf/with_em_striving_to_do_better_how_about_some/j8g2nam/"
+        },
+        {
+          "name": "EAC updated, and Linux allowed after Evil Mojo layoffs",
+          "date": "April 1, 2025, 12:00 AM",
+          "reference": ""
+        }
+      ],
+      "storeIds": {
+        "steam": "444090",
+        "epic": {
+          "namespace": "badb0ee71b474ed591ec43212547cfc8",
+          "slug": "paladins"
+        }
+      },
+      "slug": "paladins",
+      "dateChanged": "2025-04-05T19:13:42.0000000-04:00"
+    },
+    {
+      "url": "https://pubg.com/",
+      "name": "PUBG: Battlegrounds",
+      "logo": "",
+      "native": false,
+      "status": "Broken",
+      "reference": "",
+      "anticheats": [
+        "Zakynthos",
+        "BattlEye",
+        "UNCHEATER"
+      ],
+      "notes": [],
+      "updates": [
+        {
+          "name": "The team does not have a comment for this",
+          "date": "Nov 09, 2021, 5:55 PM EST",
+          "reference": "https://www.theverge.com/2021/10/5/22709918/valve-steam-deck-supported-games-anti-cheat-proton-eac-battleye-epic"
+        }
+      ],
+      "storeIds": {
+        "steam": "578080"
+      },
+      "slug": "pubg-battlegrounds",
+      "dateChanged": "2024-01-19T04:40:56.000Z"
+    },
+    {
+      "url": "https://ubisoft.com/en-us/game/rainbow-six/siege",
+      "name": "Tom Clancy's Rainbow Six® Siege",
+      "logo": "",
+      "native": false,
+      "status": "Denied",
+      "reference": "https://r6fix.ubi.com/projects/RAINBOW6-SIEGE-LIVE/issues/LIVE-59642",
+      "anticheats": [
+        "FairFight",
+        "BattlEye"
+      ],
+      "notes": [
+        [
+          "Show your support!",
+          "https://r6fix.ubi.com/projects/RAINBOW6-SIEGE-LIVE/issues/LIVE-57005"
+        ]
+      ],
+      "updates": [
+        {
+          "name": "We don’t have anything to share at this time",
+          "date": "Nov 09, 2021, 5:55 PM EST",
+          "reference": "https://www.theverge.com/2021/10/5/22709918/valve-steam-deck-supported-games-anti-cheat-proton-eac-battleye-epic"
+        },
+        {
+          "name": "Show your support!",
+          "date": "Nov 30, 2021, 5:55 PM EST",
+          "reference": "https://www.gamingonlinux.com/2021/11/ubisoft-proton-support-rainbow-six-siege-linux/"
+        },
+        {
+          "name": "Show your support! (Thread moved)",
+          "date": "Oct 05, 2021, 10:21 PM EST",
+          "reference": "https://discussions.ubisoft.com/topic/111054/linux-support-for-r6s"
+        },
+        {
+          "name": "Show your support! (Bug tracker)",
+          "date": "May 16, 2023, 0:00 UTC",
+          "reference": "https://r6fix.ubi.com/projects/RAINBOW6-SIEGE-LIVE/issues/LIVE-49179"
+        },
+        {
+          "name": "Show your support! (Bug tracker)",
+          "date": "March 23, 2024, 0:00 UTC",
+          "reference": "https://r6fix.ubi.com/projects/RAINBOW6-SIEGE-LIVE/issues/LIVE-58221"
+        }
+      ],
+      "storeIds": {
+        "steam": "359550",
+        "epic": {
+          "namespace": "carnation",
+          "slug": "rainbow-six-siege"
+        }
+      },
+      "slug": "rainbow-six-siege",
+      "dateChanged": "2024-09-22T22:18:43.803Z"
+    },
+    {
+      "url": "https://www.smitegame.com/",
+      "name": "SMITE",
+      "logo": "",
+      "native": false,
+      "status": "Supported",
+      "reference": "https://www.smitegame.com/news/the-season-of-souls-10-6-update-notes/",
+      "anticheats": [
+        "Easy Anti-Cheat"
+      ],
+      "notes": [],
+      "updates": [
+        {
+          "name": "Previously working most likely due to fluke in EAC Config",
+          "date": "Aug 05, 2022, 9:57 PM",
+          "reference": "https://github.com/ValveSoftware/Proton/issues/6062#issuecomment-1206809079"
+        },
+        {
+          "name": "Linux Support!",
+          "date": "Jun 7, 2023, 12:00 PM CDT",
+          "reference": "https://www.smitegame.com/news/the-season-of-souls-10-6-update-notes/"
+        }
+      ],
+      "storeIds": {
+        "steam": "386360",
+        "epic": {
+          "namespace": "076207fa2b5c4803a636af606c3c28b7",
+          "slug": "smite"
+        }
+      },
+      "slug": "smite",
+      "dateChanged": "2024-01-19T04:40:56.000Z"
+    },
+    {
+      "url": "",
+      "name": "Black Desert Online",
+      "logo": "",
+      "native": false,
+      "status": "Running",
+      "reference": "",
+      "anticheats": [
+        "XIGNCODE3"
+      ],
+      "notes": [],
+      "updates": [
+        {
+          "name": "No comment since Verge Article",
+          "date": "Nov 09, 2021, 5:55 PM EST",
+          "reference": "https://www.theverge.com/2021/10/5/22709918/valve-steam-deck-supported-games-anti-cheat-proton-eac-battleye-epic"
+        }
+      ],
+      "storeIds": {
+        "steam": "582660"
+      },
+      "slug": "black-desert-online",
+      "dateChanged": "2024-01-19T04:40:56.000Z"
+    },
+    {
+      "url": "https://www.fallguys.com/",
+      "name": "Fall Guys: Ultimate Knockout",
+      "logo": "",
+      "native": false,
+      "status": "Running",
+      "reference": "",
+      "anticheats": [
+        "Easy Anti-Cheat"
+      ],
+      "notes": [
+        [
+          "Requires Proton GE or Proton Experimental",
+          ""
+        ]
+      ],
+      "updates": [
+        {
+          "name": "Enabled Linux Support",
+          "date": "Mon 28, March 2022, 8:38:44 PM GMT+02:00",
+          "reference": "https://www.protondb.com/app/1097150#aRzxJIFk7c"
+        }
+      ],
+      "storeIds": {
+        "steam": "1097150",
+        "epic": {
+          "namespace": "50118b7f954e450f8823df1614b24e80",
+          "slug": "fall-guys"
+        }
+      },
+      "slug": "fall-guys-ultimate-knockout",
+      "dateChanged": "2024-01-19T04:40:56.000Z"
+    },
+    {
+      "url": "https://playark.com/",
+      "name": "ARK: Survival Evolved",
+      "logo": "",
+      "native": true,
+      "status": "Supported",
+      "reference": "",
+      "anticheats": [
+        "BattlEye",
+        "VAC"
+      ],
+      "notes": [],
+      "updates": [
+        {
+          "name": "Native on Linux",
+          "date": "Feb 11, 2016, 9:11 AM UTC",
+          "reference": "https://store.steampowered.com/news/group/4145017/view/3104663180636096966"
+        },
+        {
+          "name": "Activated BattlEye in Proton",
+          "date": "Nov 06, 2021, 2:15 AM",
+          "reference": "https://store.steampowered.com/news/group/4145017/view/3104663180636096966"
+        },
+        {
+          "name": "Native Build deprecated",
+          "date": "Jul 11, 2022, 10:13 AM",
+          "reference": "https://www.gamingonlinux.com/2022/07/ark-survival-evolved-switches-away-from-linux-native-to-use-proton/"
+        }
+      ],
+      "storeIds": {
+        "steam": "346110",
+        "epic": {
+          "namespace": "ark",
+          "slug": "ark"
+        }
+      },
+      "slug": "ark-survival-evolved",
+      "dateChanged": "2024-08-11T10:19:18.852Z"
+    },
+    {
+      "url": "https://dayz.com",
+      "name": "DayZ",
+      "logo": "",
+      "native": false,
+      "status": "Supported",
+      "reference": "",
+      "anticheats": [
+        "BattlEye",
+        "VAC"
+      ],
+      "notes": [],
+      "updates": [
+        {
+          "name": "Activated BattlEye in Proton",
+          "date": "Nov 06, 2021, 2:15 AM",
+          "reference": "https://store.steampowered.com/news/group/4145017/view/3104663180636096966"
+        }
+      ],
+      "storeIds": {
+        "steam": "221100"
+      },
+      "slug": "dayz",
+      "dateChanged": "2024-08-11T23:02:07.322Z"
+    },
+    {
+      "url": "https://deadbydaylight.com/",
+      "name": "Dead By Daylight",
+      "logo": "",
+      "native": false,
+      "status": "Supported",
+      "reference": "",
+      "anticheats": [
+        "Easy Anti-Cheat"
+      ],
+      "notes": [
+        [
+          "Enabled on Steam and Epic Games Store.",
+          "https://store.steampowered.com/news/app/381210/view/3723958226061651097"
+        ],
+        [
+          "Epic Games Store is broken on Linux. Steam Recommended.",
+          null
+        ]
+      ],
+      "updates": [
+        {
+          "name": "Plans to support Steam Deck",
+          "date": "Nov 9, 2021, 5:55 PM EST",
+          "reference": "https://www.theverge.com/2021/10/5/22709918/valve-steam-deck-supported-games-anti-cheat-proton-eac-battleye-epic"
+        },
+        {
+          "name": "Runs with workarounds",
+          "date": "Nov 15, 2022, 11:55 AM GMT+1",
+          "reference": "https://forum.deadbydaylight.com/en/discussion/comment/3265222/#Comment_3265222"
+        },
+        {
+          "name": "Previous forum link deleted",
+          "date": "Feb 22, 2023, 1:44 PM GMT+1",
+          "reference": "https://github.com/Starz0r/AreWeAntiCheatYet/issues/1151"
+        },
+        {
+          "name": "Dead by Daylight is Steam Deck Verified!",
+          "date": "May 10, 2023, 12:27 PM CDT",
+          "reference": "https://store.steampowered.com/news/app/381210/view/3723958226061651097"
+        }
+      ],
+      "storeIds": {
+        "steam": "381210",
+        "epic": {
+          "namespace": "611482b8586142cda48a0786eb8a127c",
+          "slug": "dead-by-daylight"
+        }
+      },
+      "slug": "dead-by-daylight",
+      "dateChanged": "2024-09-01T22:22:14.167Z"
+    },
+    {
+      "url": "http://www.destinythegame.com/",
+      "name": "Destiny 2",
+      "logo": "",
+      "native": false,
+      "status": "Denied",
+      "reference": "https://help.bungie.net/hc/en-us/articles/360049024592-Destiny-2-Steam-Guide#steam-deck-and-destiny-2-0-3",
+      "anticheats": [
+        "BattlEye"
+      ],
+      "notes": [
+        [
+          "Show your support!",
+          "https://www.gamingonlinux.com/2022/10/go-tell-bungie-you-want-destiny-2-on-steam-deck-linux/"
+        ]
+      ],
+      "updates": [
+        {
+          "name": "Destiny 2 is not supported for play on the Steam Deck or on any system utilizing Steam Play's Proton",
+          "date": "Mar 02, 2022, 12:10 AM UTC",
+          "reference": "https://www.gamingonlinux.com/2022/03/bungie-say-a-big-fat-no-to-proton-and-steam-deck-for-destiny-2/"
+        }
+      ],
+      "storeIds": {
+        "steam": "1085660",
+        "epic": {
+          "namespace": "428115def4ca4deea9d69c99c5a5a99e",
+          "slug": "destiny-2"
+        }
+      },
+      "slug": "destiny-2",
+      "dateChanged": "2024-01-19T04:40:56.000Z"
+    },
+    {
+      "url": "",
+      "name": "Hunt: Showdown 1896",
+      "logo": "",
+      "native": false,
+      "status": "Supported",
+      "reference": "https://www.gamingonlinux.com/2023/02/hunt-showdown-added-easy-anti-cheat-for-steam-deck-linux/",
+      "anticheats": [
+        "Easy Anti-Cheat"
+      ],
+      "notes": [],
+      "updates": [
+        {
+          "name": "Crytek didn't respond to repeated requests for comment.",
+          "date": "Nov 9, 2021, 5:55 PM EST",
+          "reference": "https://www.theverge.com/2021/10/5/22709918/valve-steam-deck-supported-games-anti-cheat-proton-eac-battleye-epic"
+        },
+        {
+          "name": "We are not confirming that it won't be ever supported, however we don't plan on this in the near future.",
+          "date": "May 11, 2022, 2:30 AM GMT+2",
+          "reference": "https://www.protondb.com/app/594650#lMZ4hnX6A"
+        },
+        {
+          "name": "Multiple reports of game working",
+          "date": "Feb 15, 2023, 5:33 PM GMT+1",
+          "reference": "https://www.gamingonlinux.com/2023/02/hunt-showdown-added-easy-anti-cheat-for-steam-deck-linux/"
+        },
+        {
+          "name": "Widespread reports of anticheat breaking following November 16th 2023 update",
+          "date": "Nov 16, 2023, 07:24 PM GMT+1",
+          "reference": "https://www.reddit.com/r/linux_gaming/comments/17wtqu1/hunt_showdown_not_working_anymore/"
+        },
+        {
+          "name": "Anticheat appears to be fixed following the official acknowledgment of anticheat issues by Crytek.",
+          "date": "Nov 23, 2023, 11:54 UTC",
+          "reference": "https://www.gamingonlinux.com/2023/11/hunt-showdown-anti-cheat-now-fixed-for-steam-deck-linux/"
+        }
+      ],
+      "storeIds": {
+        "steam": "594650"
+      },
+      "slug": "hunt-showdown",
+      "dateChanged": "2024-09-22T22:18:43.810Z"
+    },
+    {
+      "url": "https://rust.facepunch.com/",
+      "name": "Rust",
+      "logo": "",
+      "native": false,
+      "status": "Denied",
+      "reference": "https://www.gamingonlinux.com/2022/10/facepunch-put-out-a-fresh-statement-on-rust-for-steam-deck-linux/",
+      "anticheats": [
+        "Easy Anti-Cheat",
+        "VAC"
+      ],
+      "notes": [],
+      "updates": [
+        {
+          "name": "Working with EAC",
+          "date": "Tue Jul 27 2021 06:07:00 GMT+0000",
+          "reference": "https://www.gamingonlinux.com/2021/07/garry-newman-of-facepunch-mentions-working-with-eac-for-rust-on-linux-with-proton/"
+        },
+        {
+          "name": "May be ready in a month!",
+          "date": "Mon May 30 2022 01:26:00 GMT+0200",
+          "reference": "https://twitter.com/garrynewman/status/1531235676653510657"
+        },
+        {
+          "name": "sooo... any updates? - Tomorrow",
+          "date": "Tue Jun 28 2022 15:20:00 GMT+0200",
+          "reference": "https://twitter.com/garrynewman/status/1541773484015161347"
+        },
+        {
+          "name": "Client & Server Update Postponed",
+          "date": "Tue Jun 29 2022 10:55:00 GMT+0200",
+          "reference": "https://twitter.com/garrynewman/status/1541773484015161347"
+        },
+        {
+          "name": "Problems with update to EOS SDK",
+          "date": "Sun Jul 24 2022 09:01:00 GMT+0200",
+          "reference": "https://twitter.com/garrynewman/status/1551100275884171270"
+        },
+        {
+          "name": "Well, maybe no support for Linux after all",
+          "date": "Sep 26, 2022, 8:29 PM GMT+2",
+          "reference": "https://twitter.com/garrynewman/status/1574466250167787520"
+        }
+      ],
+      "storeIds": {
+        "steam": "252490"
+      },
+      "slug": "rust",
+      "dateChanged": "2024-08-11T23:02:07.337Z"
+    }
+]

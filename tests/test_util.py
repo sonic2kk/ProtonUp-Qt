@@ -1,3 +1,10 @@
+import os
+import random
+
+import pytest
+
+from pyfakefs.fake_filesystem import FakeFilesystem
+
 from pupgui2.util import *
 
 from pupgui2.constants import POSSIBLE_INSTALL_LOCATIONS
@@ -125,3 +132,44 @@ def test_get_random_game_name() -> None:
         assert get_random_game_name(steam_app) in names
         assert get_random_game_name(lutris_game) in names
         assert get_random_game_name(heroic_game) in names
+
+
+@pytest.mark.parametrize(
+    'tool_dir, version', [
+        *[pytest.param(
+            os.path.join(os.path.expanduser(install_loc["install_dir"]), 'SampleCompatibilityTool'),
+            f'{random.randint(0, 10)}.{random.randint(0, 10)}.{random.randint(0, 10)}',
+            id = f'Write version into "{install_loc["display_name"]}/SampleCompatibilityTool/VERSION.txt"'
+        ) for install_loc in POSSIBLE_INSTALL_LOCATIONS],
+        
+        pytest.param(
+            '/tmp',
+            '',
+            id = 'Write a blank version into /tmp/VERSION.txt'
+        )
+    ]
+)
+def test_write_tool_version(fs: FakeFilesystem, tool_dir: str, version: str) -> None:
+
+    """
+    Test that write_tool_version can write a random version into a given compatiblity tool directory
+    """
+
+
+    # TODO we would probably want to create a sample directory structure, possibly using a fixture, instead of
+    #      creating our folders in tests
+    os.makedirs(tool_dir, exist_ok=True)
+
+    file_content: str = ''
+    version_file_path = os.path.join(tool_dir, 'VERSION.txt')
+
+    print(f'Version file is: {version_file_path}')
+    print(f'Tool dir is: {tool_dir}')
+
+    write_tool_version(tool_dir, version)
+
+    with open(version_file_path, 'r') as version_file:
+        file_content = version_file.read()
+    
+    assert os.path.exists(version_file_path)
+    assert file_content == f'{version}\n'

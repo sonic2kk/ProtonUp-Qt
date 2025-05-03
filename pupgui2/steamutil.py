@@ -10,7 +10,7 @@ import pkgutil
 import binascii
 from steam.utils.appcache import parse_appinfo
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QMessageBox, QApplication
 
 from pupgui2.constants import APP_NAME, APP_ID, APP_ICON_FILE
@@ -463,7 +463,7 @@ def get_external_steamtinkerlaunch_intall(compat_folder: str):
     return os.path.dirname(os.readlink(symlink_path)) if os.path.exists(symlink_path) and os.readlink(symlink_path) != os.path.join(STEAM_STL_INSTALL_PATH, 'prefix', 'steamtinkerlaunch') else None
 
 
-def remove_steamtinkerlaunch(compat_folder='', remove_config=True, ctmod_object=None) -> bool:
+def remove_steamtinkerlaunch(compat_folder: str = '', remove_config: bool = True, ctmod_object: QObject | None = None) -> bool:
     """
     Removes SteamTinkerLaunch from system by removing the downloaad, removing from path
     removing config files at `$HOME/.config/steamtinkerlaunch`.

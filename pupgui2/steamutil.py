@@ -229,12 +229,12 @@ def get_steam_global_ctool_name(steam_config_folder: str) -> str:
     return d.get('0', {}).get('name', '')
 
 
-def get_steam_acruntime_list(steam_config_folder: str, cached=False) -> list[BasicCompatTool]:
+def get_steam_acruntime_list(steam_config_folder: str, cached: bool = False) -> list[BasicCompatTool]:
     """
     Returns a list of installed Steam Proton anticheat(EAC/BattlEye) Runtimes.
     Return Type: list[BasicCompatTool]
     """
-    runtimes = []
+    runtimes: list[BasicCompatTool] = []
     apps = get_steam_app_list(steam_config_folder, cached=cached)
 
     for app in apps:

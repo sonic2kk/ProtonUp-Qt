@@ -199,12 +199,12 @@ def get_steam_ct_game_map(steam_config_folder: str, compat_tools: list[BasicComp
     return ct_game_map
 
 
-def get_steam_ctool_list(steam_config_folder: str, only_proton=False, cached=False) -> list[SteamApp]:
+def get_steam_ctool_list(steam_config_folder: str, only_proton: bool = False, cached: bool = False) -> list[SteamApp]:
     """
     Returns a list of installed Steam compatibility tools (official tools).
     Return Type: list[SteamApp]
     """
-    ctools = []
+    ctools: list[SteamApp] = []
     apps = get_steam_app_list(steam_config_folder, cached=cached)
 
     for app in apps:

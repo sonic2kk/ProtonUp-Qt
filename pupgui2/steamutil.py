@@ -151,7 +151,7 @@ def get_steam_shortcuts_list(steam_config_folder: str, compat_tools: dict=None) 
     return apps
 
 
-def get_steam_game_list(steam_config_folder: str, compat_tool: BasicCompatTool | None=None, cached=False) -> list[SteamApp]:
+def get_steam_game_list(steam_config_folder: str, compat_tool: BasicCompatTool | None=None, cached: bool = False) -> list[SteamApp]:
     """
     Returns a list of installed Steam games and which compatibility tools they are using.
     Specify compat_tool to only return games using the specified tool.

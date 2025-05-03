@@ -770,7 +770,7 @@ def get_steam_user_list(steam_config_folder: str) -> list[SteamUser]:
     return users
 
 
-def determine_most_recent_steam_user(steam_users: list[SteamUser]) -> SteamUser:
+def determine_most_recent_steam_user(steam_users: list[SteamUser]) -> SteamUser | None:
     """
     Returns the Steam user that was logged-in most recent, otherwise the first user or None.
     Looks for the first user with most_recent=True.

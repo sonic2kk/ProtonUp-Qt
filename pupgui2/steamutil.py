@@ -17,10 +17,10 @@ from pupgui2.constants import APP_NAME, APP_ID, APP_ICON_FILE
 from pupgui2.constants import PROTON_EAC_RUNTIME_APPID, PROTON_BATTLEYE_RUNTIME_APPID, PROTON_NEXT_APPID, STEAMLINUXRUNTIME_APPID, STEAMLINUXRUNTIME_SOLDIER_APPID, STEAMLINUXRUNTIME_SNIPER_APPID
 from pupgui2.constants import LOCAL_AWACY_GAME_LIST, PROTONDB_API_URL
 from pupgui2.constants import STEAM_STL_INSTALL_PATH, STEAM_STL_CONFIG_PATH, STEAM_STL_SHELL_FILES, STEAM_STL_FISH_VARIABLES, HOME_DIR, IS_FLATPAK
-from pupgui2.datastructures import LoginUsersVDF, ShortcutsVDF, SteamApp, AWACYStatus, BasicCompatTool, CTType, SteamUser, RuntimeType
+from pupgui2.datastructures import AppManifestVDF, ConfigVDF, LibraryFoldersVDF, LoginUsersVDF, ShortcutsVDF, SteamApp, AWACYStatus, BasicCompatTool, CTType, SteamUser, RuntimeType
 
 
-_cached_app_list = []
+_cached_app_list: list[SteamApp] = []
 _cached_steam_ctool_id_map = None
 
 
@@ -42,7 +42,7 @@ def get_steam_vdf_compat_tool_mapping(vdf_file: dict) -> dict:
     return m
 
 
-def get_steam_app_list(steam_config_folder: str, cached=False, no_shortcuts=False) -> list[SteamApp]:
+def get_steam_app_list(steam_config_folder: str, cached: bool = False, no_shortcuts: bool = False) -> list[SteamApp]:
     """
     Returns a list of installed Steam apps and optionally game names and the compatibility tool they are using
     steam_config_folder = e.g. '~/.steam/root/config'
@@ -56,35 +56,36 @@ def get_steam_app_list(steam_config_folder: str, cached=False, no_shortcuts=Fals
     libraryfolders_vdf_file = os.path.join(os.path.expanduser(steam_config_folder), 'libraryfolders.vdf')
     config_vdf_file = os.path.join(os.path.expanduser(steam_config_folder), 'config.vdf')
 
-    apps = []
+    apps: list[SteamApp] = []
 
     try:
-        v = vdf_safe_load(libraryfolders_vdf_file)
-        c = get_steam_vdf_compat_tool_mapping(vdf_safe_load(config_vdf_file))
+        v: LibraryFoldersVDF = vdf_safe_load(libraryfolders_vdf_file)
+        c: ConfigVDF = get_steam_vdf_compat_tool_mapping(vdf_safe_load(config_vdf_file))
 
-        for fid in v.get('libraryfolders'):
-            if 'apps' not in v.get('libraryfolders').get(fid):
+        for fid in v.get('libraryfolders', {}):
+            if 'apps' not in v.get('libraryfolders', {}).get(fid, {}):
                 continue
-            fid_path = v.get('libraryfolders').get(fid).get('path')
+            fid_path = str(v.get('libraryfolders', {}).get(fid, {}).get('path', ''))
             fid_libraryfolder_path = fid_path
             if fid == '0':
                 fid_path = os.path.join(fid_path, 'steamapps', 'common')
-            for appid in v.get('libraryfolders').get(fid).get('apps'):
+            for appid in v.get('libraryfolders', {}).get(fid, {}).get('apps', {}):
                 # Skip if app isn't installed to `/path/to/steamapps/common` - Skips soundtracks
                 fid_steamapps_path = os.path.join(fid_libraryfolder_path, 'steamapps')  # e.g. /home/gaben/Games/steamapps
                 appmanifest_path = os.path.join(fid_steamapps_path, f'appmanifest_{appid}.acf')
                 if os.path.isfile(appmanifest_path):
-                    appmanifest_install_path = vdf_safe_load(appmanifest_path).get('AppState', {}).get('installdir', None)
+                    appmanifest_acf: AppManifestVDF = vdf_safe_load(appmanifest_path)
+                    appmanifest_install_path = str(appmanifest_acf.get('AppState', {}).get('installdir', ''))
                     if not appmanifest_install_path or not os.path.isdir(os.path.join(fid_steamapps_path, 'common', appmanifest_install_path)):
                         continue
 
                 app = SteamApp()
                 app.app_id = int(appid)
-                app.libraryfolder_id = fid
+                app.libraryfolder_id = int(fid)
                 app.libraryfolder_path = fid_path
                 app.anticheat_runtimes = { RuntimeType.EAC: False, RuntimeType.BATTLEYE: False }  # Have to initialize as False here for some reason...
                 if ct := c.get(appid):
-                    app.compat_tool = ct.get('name')
+                    app.compat_tool = str(ct.get('name', ''))
                 apps.append(app)
         apps = update_steamapp_info(steam_config_folder, apps)
         apps = update_steamapp_awacystatus(apps)

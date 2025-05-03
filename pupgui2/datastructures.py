@@ -274,3 +274,6 @@ class HardwarePlatform(Enum):
 
 ShortcutsVDF: TypeAlias = dict[str, dict[str, dict[str, str | int | dict[str, str]]]]
 LoginUsersVDF: TypeAlias = dict[str, dict[str, dict[str, str]]]
+LibraryFoldersVDF: TypeAlias = dict[str, dict[str, dict[str, str | dict[str, str]]]]
+AppManifestVDF: TypeAlias = dict[str, dict[str, str | dict[str, dict[str, str]] | dict[str, str]]]
+ConfigVDF: TypeAlias = dict[str, dict[str, dict[str, dict[str, dict[str, str | dict[str, str | dict[str, dict[str, str]] | dict[str, str]] | dict[str, dict[str, str]]]]] | dict[str, dict[str, dict[str, str]]] | str | dict[str, str]]]

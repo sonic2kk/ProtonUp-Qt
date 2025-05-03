@@ -408,7 +408,7 @@ def steam_update_ctool(game: SteamApp, new_ctool=None, steam_config_folder='') -
     return True
 
 
-def steam_update_ctools(games: dict[SteamApp, str], steam_config_folder='') -> bool:
+def steam_update_ctools(games: dict[SteamApp, str | None], steam_config_folder: str= '') -> bool:
     """
     Change compatibility tool for multiple games in Steam config vdf.
     Return Type: bool
@@ -427,7 +427,7 @@ def steam_update_ctools(games: dict[SteamApp, str], steam_config_folder='') -> b
                 if new_ctool is None:
                     c.pop(str(game_id))
                 else:
-                    c.get(str(game_id))['name'] = str(new_ctool)
+                    c.get(str(game_id), {})['name'] = str(new_ctool)
             else:
                 c[str(game_id)] = {"name": str(new_ctool), "config": "", "priority": "250"}
 

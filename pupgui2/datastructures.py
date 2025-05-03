@@ -273,3 +273,4 @@ class HardwarePlatform(Enum):
 
 
 ShortcutsVDF: TypeAlias = dict[str, dict[str, dict[str, str | int | dict[str, str]]]]
+LoginUsersVDF: TypeAlias = dict[str, dict[str, dict[str, str]]]

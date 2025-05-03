@@ -17,7 +17,7 @@ from pupgui2.constants import APP_NAME, APP_ID, APP_ICON_FILE
 from pupgui2.constants import PROTON_EAC_RUNTIME_APPID, PROTON_BATTLEYE_RUNTIME_APPID, PROTON_NEXT_APPID, STEAMLINUXRUNTIME_APPID, STEAMLINUXRUNTIME_SOLDIER_APPID, STEAMLINUXRUNTIME_SNIPER_APPID
 from pupgui2.constants import LOCAL_AWACY_GAME_LIST, PROTONDB_API_URL
 from pupgui2.constants import STEAM_STL_INSTALL_PATH, STEAM_STL_CONFIG_PATH, STEAM_STL_SHELL_FILES, STEAM_STL_FISH_VARIABLES, HOME_DIR, IS_FLATPAK
-from pupgui2.datastructures import ShortcutsVDF, SteamApp, AWACYStatus, BasicCompatTool, CTType, SteamUser, RuntimeType
+from pupgui2.datastructures import LoginUsersVDF, ShortcutsVDF, SteamApp, AWACYStatus, BasicCompatTool, CTType, SteamUser, RuntimeType
 
 
 _cached_app_list = []
@@ -745,14 +745,15 @@ def get_steam_user_list(steam_config_folder: str) -> list[SteamUser]:
     """
     loginusers_vdf_file = os.path.join(os.path.expanduser(steam_config_folder), 'loginusers.vdf')
 
-    users = []
+    users: list[SteamUser] = []
 
     if not os.path.exists(loginusers_vdf_file):
         print(f'Warning: Loginusers file does not exist at {loginusers_vdf_file}')
         return []
 
     try:
-        d = vdf_safe_load(loginusers_vdf_file)
+        d: LoginUsersVDF = vdf_safe_load(loginusers_vdf_file)
+
         u = d.get('users', {})
         for uid in list(u.keys()):
             uvalue = u.get(uid, {})

@@ -175,22 +175,26 @@ def ctool_is_runtime_for_app(app: SteamApp, compat_tool: BasicCompatTool | None)
         or 'battleyeruntime' in compat_tool_name and app.anticheat_runtimes[RuntimeType.BATTLEYE]
 
 
-def get_steam_ct_game_map(steam_config_folder: str, compat_tools: list[BasicCompatTool], cached=False) -> dict[BasicCompatTool, list[SteamApp]]:
+def get_steam_ct_game_map(steam_config_folder: str, compat_tools: list[BasicCompatTool], cached: bool = False) -> dict[BasicCompatTool, list[SteamApp]]:
     """
     Returns a dict that maps a list of Steam games to each compatibility given in the compat_tools parameter.
     Steam games without a selected compatibility tool are not included.
     Informal Example: { GE-Proton7-43: [GTA V, Cyberpunk 2077], SteamTinkerLaunch: [Vecter, Terraria] }
     Return Type: dict[BasicCompatTool, list[SteamApp]]
     """
-    ct_game_map = {}
+    ct_game_map: dict[BasicCompatTool, list[SteamApp]] = {}
 
     apps = get_steam_app_list(steam_config_folder, cached=cached)
 
-    ct_name_object_map = {ct.get_internal_name(): ct for ct in compat_tools}
+    ct_name_object_map: dict[str, BasicCompatTool] = {ct.get_internal_name(): ct for ct in compat_tools}
 
     for app in apps:
-        if app.app_type == 'game' and app.compat_tool in ct_name_object_map:
-            ct_game_map.setdefault(ct_name_object_map.get(app.compat_tool), []).append(app)
+        if app.app_type != 'game' or app.compat_tool not in ct_name_object_map:
+            continue
+
+        ct_name_object_map_tool = ct_name_object_map.get(app.compat_tool)
+        if ct_name_object_map_tool:
+            ct_game_map.setdefault(ct_name_object_map_tool, []).append(app)
 
     return ct_game_map
 

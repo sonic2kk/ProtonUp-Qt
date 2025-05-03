@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import json
+from typing import Callable, TextIO
 import vdf
 import requests
 import threading
@@ -453,7 +454,7 @@ def is_steam_running() -> bool:
     return False
 
 
-get_fish_user_paths = lambda mfile: ([line.strip() for line in mfile.readlines() if 'fish_user_paths' in line] or ['SETUVAR fish_user_paths:\\x1d'])[0].split('fish_user_paths:')[1:][0].split('\\x1e')
+get_fish_user_paths: Callable[[TextIO], list[str]] = lambda mfile: ([line.strip() for line in mfile.readlines() if 'fish_user_paths' in line] or ['SETUVAR fish_user_paths:\\x1d'])[0].split('fish_user_paths:')[1:][0].split('\\x1e')
 
 
 def get_external_steamtinkerlaunch_intall(compat_folder):

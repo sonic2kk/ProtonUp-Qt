@@ -1,4 +1,5 @@
 import os
+from typing import TypeAlias
 import vdf
 import yaml
 import json
@@ -269,3 +270,6 @@ class HardwarePlatform(Enum):
     """ Hardware platform. Used by util.py#detect_platform() """
     DESKTOP = 0
     STEAM_DECK = 1
+
+
+ShortcutsVDF: TypeAlias = dict[str, dict[str, dict[str, str | int | dict[str, str]]]]

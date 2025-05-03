@@ -17,7 +17,7 @@ from pupgui2.constants import APP_NAME, APP_ID, APP_ICON_FILE
 from pupgui2.constants import PROTON_EAC_RUNTIME_APPID, PROTON_BATTLEYE_RUNTIME_APPID, PROTON_NEXT_APPID, STEAMLINUXRUNTIME_APPID, STEAMLINUXRUNTIME_SOLDIER_APPID, STEAMLINUXRUNTIME_SNIPER_APPID
 from pupgui2.constants import LOCAL_AWACY_GAME_LIST, PROTONDB_API_URL
 from pupgui2.constants import STEAM_STL_INSTALL_PATH, STEAM_STL_CONFIG_PATH, STEAM_STL_SHELL_FILES, STEAM_STL_FISH_VARIABLES, HOME_DIR, IS_FLATPAK
-from pupgui2.datastructures import SteamApp, AWACYStatus, BasicCompatTool, CTType, SteamUser, RuntimeType
+from pupgui2.datastructures import ShortcutsVDF, SteamApp, AWACYStatus, BasicCompatTool, CTType, SteamUser, RuntimeType
 
 
 _cached_app_list = []
@@ -565,7 +565,7 @@ def remove_steamtinkerlaunch(compat_folder: str = '', remove_config: bool = True
         return False
 
 
-def install_steam_library_shortcut(steam_config_folder: str, remove_shortcut=False) -> int:
+def install_steam_library_shortcut(steam_config_folder: str, remove_shortcut: bool = False) -> int:
     """
     Adds a shortcut to launch this app to the Steam Library
     Return: 0=success, 1=error, 2=already installed
@@ -588,11 +588,11 @@ def install_steam_library_shortcut(steam_config_folder: str, remove_shortcut=Fal
             sid=-1
             if os.path.exists(shortcuts_file):
                 with open(shortcuts_file, 'rb') as f:
-                    shortcuts_vdf = vdf.binary_load(f)
+                    shortcuts_vdf: ShortcutsVDF = vdf.binary_load(f)
                     
                     for sid in list(shortcuts_vdf.get('shortcuts', {}).keys()):
-                        svalue = shortcuts_vdf.get('shortcuts', {}).get(sid)
-                        if APP_NAME in svalue.get('AppName', ''):
+                        svalue = shortcuts_vdf.get('shortcuts', {}).get(sid, {})
+                        if APP_NAME in str(svalue.get('AppName', '')):
                             if remove_shortcut:
                                 shortcuts_vdf.get('shortcuts', {}).pop(sid)
                             else:
@@ -668,15 +668,15 @@ def write_steam_shortcuts_list(steam_config_folder: str, shortcuts: list[SteamAp
         # read shortcuts.vdf
         shortcuts_vdf = {}
         with open(shortcuts_file, 'rb') as f:
-            shortcuts_vdf = vdf.binary_load(f)
+            shortcuts_vdf: ShortcutsVDF = vdf.binary_load(f)
         current_shortcuts = shortcuts_vdf.get('shortcuts', {})
 
         # update/add new shortcuts
         modified_shorcuts = shortcuts_by_user.get(userf, {})
         for sid in list(modified_shorcuts.keys()):
-            shortcut_modified: SteamApp = modified_shorcuts.get(sid)
+            shortcut_modified: SteamApp = modified_shorcuts.get(sid, SteamApp())
             if sid in current_shortcuts:  # update existing shortcut
-                svalue_current = current_shortcuts.get(sid)
+                svalue_current = current_shortcuts.get(sid, {})
                 svalue_current['AppName'] = shortcut_modified.game_name
                 svalue_current['Exe'] = shortcut_modified.shortcut_exe
                 svalue_current['StartDir'] = shortcut_modified.shortcut_startdir

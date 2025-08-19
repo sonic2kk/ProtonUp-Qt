@@ -174,7 +174,7 @@ class LutrisGame:
     installed_at = 0
     install_dir = ''
 
-    install_loc = None
+    install_loc: dict[str, str] | None = None
 
     def get_game_config(self) -> dict:
         
